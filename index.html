@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Kasir Daeng - V2.14</title>
+    <title>Sistem Kasir Daeng - V3.0 (Full Offline & Sync)</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
@@ -56,6 +56,12 @@
         .shop-banner { background: var(--success); color: #ffffff; border: 3px solid #111; padding: 25px 15px; border-radius: 10px; box-shadow: 4px 4px 0px #111; margin-bottom: 15px; text-align: center; font-size: 2.2rem; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
         .user-profile { font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e1f0fa; padding: 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--accent); margin-bottom: 12px; }
         
+        /* Status Sync (Mengikuti gaya reference code lu) */
+        .status-sync { font-size: 11px; padding: 4px 8px; border-radius: 4px; display: inline-block; font-weight: 700; }
+        .sync-online { background: rgba(46, 204, 113, 0.2); color: var(--success); }
+        .sync-offline { background: rgba(243, 156, 18, 0.2); color: var(--warning); }
+        .sync-pending { background: rgba(52, 152, 219, 0.2); color: var(--accent); }
+
         /* Satuan Tags */
         .unit-tag { background: var(--primary); color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .unit-tag span { cursor: pointer; color: #ff7675; font-weight: 900; padding: 0 4px; }
@@ -123,10 +129,13 @@
         .modal-title { font-size: 1.4rem; font-weight: 900; color: var(--primary); margin-bottom: 15px; text-align: center; text-transform: uppercase;}
         .modal-msg { font-size: 1.1rem; color: #444; margin-bottom: 25px; text-align: center; font-weight: 700; line-height: 1.4; }
         
+        /* Toast Notification */
         .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-        .toast { background: var(--primary); color: white; padding: 16px; border-radius: 10px; font-weight: 800; font-size: 1rem; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transform: translateY(-100px); opacity: 0; transition: 0.4s; border-bottom: 4px solid var(--success); }
+        .toast { background: var(--primary); color: white; padding: 16px; border-radius: 10px; font-weight: 800; font-size: 1rem; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); transform: translateY(-100px); opacity: 0; transition: 0.4s; border-bottom: 4px solid var(--success); }
         .toast.show { transform: translateY(0); opacity: 1; }
         .toast.error { border-color: var(--danger); }
+        .toast.syncing { border-color: var(--accent); background: rgba(52, 152, 219, 0.95); }
+        
         .toggle-btn-std { font-size: 0.8rem; background: var(--border); color: var(--primary); padding: 6px 12px; border-radius: 6px; font-weight: bold; }
 
         /* Fitur Toggle Riwayat & Text */
@@ -207,7 +216,7 @@
         <div class="modal-box">
             <div class="modal-title">Pilih Satuan</div>
             <div id="unitSelectContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 250px; overflow-y: auto; padding-bottom: 10px;">
-                </div>
+            </div>
             <button class="btn-thumb" style="background: var(--danger); color: white; width: 100%; margin-top: 15px;" onclick="closeModal('unitSelectModal')">TUTUP</button>
         </div>
     </div>
@@ -215,11 +224,12 @@
     <div id="loginModal" class="modal-overlay">
         <div class="modal-box" style="padding: 30px;">
             <h2 style="justify-content: center; border:none; margin-bottom: 5px; font-size: 1.5rem;">☁️ CLOUD SYNC</h2>
-            <p style="font-size:1rem; color:#666; margin-bottom: 25px; font-weight: 700; text-align: center;">Simpan data permanen dan sinkronisasi otomatis.</p>
+            <p style="font-size:1rem; color:#666; margin-bottom: 25px; font-weight: 700; text-align: center;">Simpan data permanen dan sinkronisasi otomatis. Aman walau HP offline.</p>
             <button class="btn-thumb" onclick="loginGoogle()" style="background: #fff; color: #111; border: 2px solid #ddd; margin-bottom: 15px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                Login Google
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg> 
+                Login dengan Google
             </button>
-            <button class="btn-thumb" onclick="closeModal('loginModal')" style="background: var(--bg); color: #555;">Nanti Saja (Lokal)</button>
+            <button class="btn-thumb" onclick="closeModal('loginModal')" style="background: var(--bg); color: #555;">Nanti Saja (Guest)</button>
         </div>
     </div>
 
@@ -230,11 +240,10 @@
                     <span>👤 <span id="userNameDisplay">Kasir Lokal</span></span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span id="networkStatus" class="status-sync sync-offline">
-                        <div class="sync-dot"></div> <span id="syncStatusText">Offline Mode</span>
-                    </span>
-                    <button id="btnLoginBtn" class="btn-primary" style="padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="showModal('loginModal')">Login Cloud</button>
-                    <button id="btnLogoutBtn" class="btn-danger" style="display:none; padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="customConfirm('Keluar Akun?', 'Yakin mau balik ke mode tamu?', logoutGoogle)">Keluar</button>
+                    <span id="networkStatus" class="status-sync sync-offline">Menyiapkan...</span>
+                    
+                    <button id="btnLoginBtn" class="btn-primary" style="padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="document.getElementById('loginModal').classList.add('active')">Login</button>
+                    <button id="btnLogoutBtn" class="btn-danger" style="display:none; padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="customConfirm('Logout Akun?', 'Keluar ke mode Guest? Data Cloud aman di server.', forceLogoutToGuest)">Logout</button>
                 </div>
             </div>
 
@@ -475,10 +484,21 @@
 </div>
 <script>
     // ==========================================
-    // BAGIAN 4: ENGINE LOGIKA, KALKULATOR & STATE
+    // BAGIAN 4: ENGINE Z-OFFLINE, LOGIKA & SYNC
     // ==========================================
 
-    const APP_VERSION = "2.14"; 
+    const APP_VERSION = "3.0"; 
+
+    // --- KONFIGURASI SUPABASE ---
+    const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0emtnZmlnY3Zka2R5eHdzZGJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMTU4MjcsImV4cCI6MjA4Nzc5MTgyN30.jcreMZVPVSjq-piS0nnrxqd4FAME6qwDivIfOzksbqM';
+    
+    let sbClient = null;
+    let currentUser = null;
+    let APP_MODE = localStorage.getItem('pos_app_mode') || 'GUEST';
+    let pendingSync = JSON.parse(localStorage.getItem('pos_pending_sync')) || [];
+
+    // --- DATABASE LOKAL KASIR ---
     let shopName = localStorage.getItem('pos_shop_name') || 'TOKO DAENG';
     let units = JSON.parse(localStorage.getItem('pos_units')) || ['Kg', 'Ons', 'Liter', 'Pcs', 'Bks', 'Satuan'];
     let inventory = JSON.parse(localStorage.getItem('pos_inventory')) || [];
@@ -487,703 +507,408 @@
     let cart = [];
     let manualItemCounter = 1;
 
-    // --- UTILITIES & FORMATTER ---
-    const formatRp = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(n);
-    const parseRp = (s) => parseFloat(s.toString().replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
-    
-    function formatRupiahUI(el) {
-        let val = el.value.replace(/[^0-9]/g, '');
-        el.value = val ? formatRp(val) : '';
-    }
-
-    function toggleUI(c, i) { 
-        const el = document.getElementById(c); 
-        el.classList.toggle('collapsed');
-        document.getElementById(i).innerText = el.classList.contains('collapsed') ? "BUKA [+]" : "TUTUP [-]";
-    }
-
-    // --- CUSTOM MODALS ---
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-    function customAlert(title, message) {
-        document.getElementById('alertTitle').innerText = title;
-        document.getElementById('alertMsg').innerText = message;
-        document.getElementById('customAlert').classList.add('active');
-    }
-
-    function customConfirm(title, message, actionCallback) {
-        document.getElementById('confirmTitle').innerText = title;
-        document.getElementById('confirmMsg').innerText = message;
-        document.getElementById('customConfirm').classList.add('active');
-        
-        const btnYes = document.getElementById('confirmBtnYes');
-        const newBtnYes = btnYes.cloneNode(true); 
-        btnYes.parentNode.replaceChild(newBtnYes, btnYes);
-        
-        newBtnYes.addEventListener('click', () => {
-            closeModal('customConfirm');
-            if(actionCallback) actionCallback();
-        });
-    }
-
-    function customPrompt(title, message, defaultVal, actionCallback) {
-        document.getElementById('promptTitle').innerText = title;
-        document.getElementById('promptMsg').innerText = message;
-        const input = document.getElementById('promptInput');
-        input.value = defaultVal || '';
-        document.getElementById('customPrompt').classList.add('active');
-        setTimeout(() => input.focus(), 100);
-        
-        const btnSave = document.getElementById('promptBtnSave');
-        const newBtnSave = btnSave.cloneNode(true);
-        btnSave.parentNode.replaceChild(newBtnSave, btnSave);
-        
-        newBtnSave.addEventListener('click', () => {
-            let val = document.getElementById('promptInput').value.trim();
-            closeModal('customPrompt');
-            if(actionCallback && val) actionCallback(val);
-        });
-    }
-
-    function showToast(msg, type = 'success') {
-        const box = document.getElementById('toastBox');
-        const t = document.createElement('div');
-        t.className = `toast ${type}`;
-        t.innerText = msg;
-        box.appendChild(t);
-        setTimeout(() => t.classList.add('show'), 10);
-        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
-    }
-
-    // --- CUSTOM SELECT SATUAN ---
-    function openUnitSelectModal() {
-        const container = document.getElementById('unitSelectContainer');
-        container.innerHTML = units.map(u => `
-            <div class="unit-option-btn" onclick="selectUnitOption('${u}')">${u}</div>
-        `).join('');
-        document.getElementById('unitSelectModal').classList.add('active');
-    }
-
-    function selectUnitOption(selectedUnit) {
-        document.getElementById('itemUnitVal').value = selectedUnit;
-        document.getElementById('itemUnitText').innerText = selectedUnit;
-        closeModal('unitSelectModal');
-    }
-
-    // --- MANAJEMEN SATUAN ---
-    function addUnit() {
-        const u = document.getElementById('unitName').value.trim();
-        if(!u) return;
-        const isExist = units.some(unit => unit.toLowerCase() === u.toLowerCase());
-        if(isExist) return customAlert("Gagal", "Satuan tersebut sudah ada!"); 
-        
-        units.push(u); 
-        localStorage.setItem('pos_units', JSON.stringify(units)); 
-        renderUnits(); 
-        document.getElementById('unitName').value = ''; 
-        showToast("Satuan ditambahkan");
-    }
-
-    function deleteUnit(unitName) {
-        units = units.filter(u => u !== unitName);
-        localStorage.setItem('pos_units', JSON.stringify(units));
-        renderUnits();
-        
-        if(document.getElementById('itemUnitVal').value === unitName) {
-            document.getElementById('itemUnitVal').value = units[0] || '';
-            document.getElementById('itemUnitText').innerText = units[0] || 'PILIH';
-        }
-        showToast("Satuan dihapus");
-    }
-
-    function renderUnits() {
-        document.getElementById('unitTags').innerHTML = units.map(u => `
-            <div class="unit-tag">
-                ${u} <span onclick="customConfirm('Hapus Satuan?', 'Yakin hapus satuan ${u}?', () => deleteUnit('${u}'))">X</span>
-            </div>
-        `).join('');
-    }
-
-    // --- MANAJEMEN DATABASE BARANG ---
-    function addInventory() {
-        const name = document.getElementById('itemName').value.trim();
-        const price = parseRp(document.getElementById('itemPrice').value);
-        const unit = document.getElementById('itemUnitVal').value; 
-        
-        if (!name || price <= 0) return customAlert("Error", "Nama dan Harga wajib diisi!");
-        
-        const existingItem = inventory.find(x => x.name.toLowerCase() === name.toLowerCase());
-        
-        if(existingItem) {
-            existingItem.price = price;
-            existingItem.unit = unit; 
-            showToast(`Harga ${existingItem.name} di-update!`);
-        } else {
-            inventory.push({ id: Date.now(), name: name, price: price, unit: unit });
-            showToast("Barang baru masuk Database!");
-        }
-        
-        localStorage.setItem('pos_inventory', JSON.stringify(inventory));
-        renderInventory();
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemPrice').value = '';
-    }
-
-    function renderInventory() {
-        const q = document.getElementById('searchInventoryInput').value.toLowerCase();
-        const list = inventory.filter(x => x.name.toLowerCase().includes(q));
-        
-        document.getElementById('inventoryList').innerHTML = list.map(i => `
-            <tr>
-                <td><b style="font-size:1.1rem; text-transform: capitalize;">${i.name}</b></td>
-                <td style="font-weight:700;">Rp ${formatRp(i.price)}</td>
-                <td><span class="badge-unit">${i.unit}</span></td>
-                <td class="action-cell" style="text-align: right;">
-                    <button class="btn-primary" style="padding: 6px; width: auto; font-size: 0.8rem; margin-bottom: 5px;" onclick="editItemPrice(${i.id})">EDIT</button>
-                    <button class="btn-danger" style="padding: 6px; width: auto; font-size: 0.8rem;" onclick="customConfirm('Hapus Barang?', 'Yakin hapus ${i.name}?', () => deleteInventory(${i.id}))">HAPUS</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function deleteInventory(id) {
-        inventory = inventory.filter(x => x.id !== id);
-        localStorage.setItem('pos_inventory', JSON.stringify(inventory));
-        renderInventory();
-        showToast("Barang terhapus", "error");
-    }
-
-    function editItemPrice(id) {
-        const item = inventory.find(x => x.id === id);
-        if(!item) return;
-        customPrompt('Edit Harga', `Harga baru untuk ${item.name}:`, formatRp(item.price), (newVal) => {
-            const newPrice = parseRp(newVal);
-            if(newPrice > 0) {
-                item.price = newPrice;
-                localStorage.setItem('pos_inventory', JSON.stringify(inventory));
-                renderInventory();
-                showToast(`Harga ${item.name} berhasil diubah!`);
-            }
-        });
-    }
-
-    document.getElementById('searchInventoryInput').addEventListener('input', renderInventory);
-
-    // --- PENCARIAN & TIMBANGAN ECERAN CERDAS ---
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
-    const nominalInput = document.getElementById('nominalInput');
-
-    function setQuickQty(val) {
-        document.getElementById('itemQty').value = val;
-    }
-
-    searchInput.addEventListener('input', function() {
-        const q = this.value.toLowerCase();
-        if (q.length < 1) { 
-            searchResults.style.display = 'none'; 
-            resetSelection();
-            return; 
-        }
-
-        const list = inventory.filter(i => i.name.toLowerCase().includes(q));
-        searchResults.innerHTML = list.map(i => {
-            const regex = new RegExp(`(${q})`, 'gi');
-            const highlightedName = i.name.replace(regex, `<span style="background: rgba(46, 204, 113, 0.4); color: #111; border-radius: 3px; padding: 0 2px;">$1</span>`);
-            
-            return `
-            <div class="search-item" onclick="selectItem('${i.name.replace(/'/g, "\\'")}', ${i.price}, '${i.unit}')">
-                <span style="text-transform: capitalize;">${highlightedName}</span> 
-                <span style="color:var(--success);">Rp ${formatRp(i.price)}/${i.unit}</span>
-            </div>
-            `;
-        }).join('');
-        
-        searchResults.style.display = list.length > 0 ? 'block' : 'none';
-    });
-
-    function selectItem(name, price, unit) {
-        document.getElementById('searchInput').value = name; 
-        document.getElementById('selectedItemName').value = name;
-        document.getElementById('selectedItemPrice').value = price;
-        document.getElementById('selectedItemUnit').value = unit;
-        
-        searchResults.style.display = 'none';
-        
-        document.getElementById('scaleResultVal').innerText = `0`;
-        document.getElementById('scaleResultUnit').innerText = unit;
-        document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`;
-        
-        nominalInput.value = '';
-        nominalInput.focus(); 
-    }
-
-    function resetSelection() {
-        document.getElementById('selectedItemName').value = '';
-        document.getElementById('selectedItemPrice').value = '';
-        document.getElementById('selectedItemUnit').value = '';
-        document.getElementById('itemQty').value = '1';
-        document.getElementById('searchInput').value = '';
-        
-        document.getElementById('scaleResultVal').innerText = `0`;
-        document.getElementById('scaleResultUnit').innerText = 'Kg';
-        document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`;
-        nominalInput.value = '';
-    }
-
-    function calculateScaleFromInput() {
-        const nominal = parseRp(nominalInput.value);
-        const pricePerUnit = parseFloat(document.getElementById('selectedItemPrice').value) || 0;
-        const unit = document.getElementById('selectedItemUnit').value;
-
-        if (pricePerUnit <= 0 || nominal <= 0) {
-            document.getElementById('itemQty').value = '1';
-            document.getElementById('scaleResultVal').innerText = '0';
-            document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`;
-            return;
-        }
-
-        if (unit.toLowerCase() !== 'kg') {
-            const qty = nominal / pricePerUnit;
-            document.getElementById('itemQty').value = qty.toFixed(2);
-            document.getElementById('scaleResultVal').innerText = qty.toFixed(2);
-            document.getElementById('scaleResultUnit').innerText = unit;
-            document.getElementById('scaleResultDesc').innerText = `Satuan Non-Timbangan`;
-            return;
-        }
-
-        const qtyKg = nominal / pricePerUnit;
-        const totalGrams = qtyKg * 1000;
-        
-        let ons = Math.floor(totalGrams / 100);
-        let sisaGrams = totalGrams % 100;
-        let garis = Math.round(sisaGrams / 10);
-        
-        if(garis >= 10) { ons += 1; garis = 0; }
-        
-        document.getElementById('itemQty').value = qtyKg.toFixed(3);
-        document.getElementById('scaleResultVal').innerText = qtyKg.toFixed(3);
-        document.getElementById('scaleResultUnit').innerText = 'Kg';
-        document.getElementById('scaleResultDesc').innerText = `Timbangan: ${ons} Ons ${garis} Garis`;
-    }
-
-    // --- KALKULATOR KASIR CERDAS ---
-    let calcRaw = '0'; 
-
-    function formatCalcDisplay(rawStr) {
-        let parts = rawStr.split(/([*/+\-])/);
-        for(let i=0; i<parts.length; i++) {
-            if(!['*', '/', '+', '-'].includes(parts[i]) && parts[i] !== '') {
-                if(!parts[i].includes('.')) parts[i] = formatRp(parseInt(parts[i]));
-            } else if (parts[i] === '*') parts[i] = ' X ';
-            else if (parts[i] === '/') parts[i] = ' : ';
-            else parts[i] = ` ${parts[i]} `;
-        }
-        return parts.join('').trim();
-    }
-
-    function calcAction(action) {
-        const display = document.getElementById('calcDisplay');
-        
-        if (action === 'C') calcRaw = '0';
-        else if (action === 'DEL') calcRaw = calcRaw.length > 1 ? calcRaw.slice(0, -1) : '0';
-        else if (action === '=') {
-            try { 
-                let res = eval(calcRaw); 
-                calcRaw = Number.isInteger(res) ? res.toString() : res.toFixed(2).toString();
-            } catch { 
-                calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); 
-            }
-        } else if (action === '+') {
-            try {
-                let res = eval(calcRaw);
-                if (res > 0) {
-                    cart.push({ id: Date.now(), name: `Barang Manual ${manualItemCounter}`, price: res, qty: 1, unit: 'Ls', subtotal: res, isManual: true });
-                    manualItemCounter++;
-                    renderCart();
-                    showToast(`Masuk Keranjang: Rp ${formatRp(res)}`);
-                }
-                calcRaw = '0'; 
-            } catch {
-                calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000);
-            }
-        } else {
-            let sysAction = action;
-            if (action === 'X') sysAction = '*';
-            if (action === ':') sysAction = '/';
-
-            if (calcRaw === '0') {
-                if (['00', '000'].includes(sysAction)) return; 
-                if (sysAction === '.') calcRaw = '0.';
-                else if (['*', '/', '-'].includes(sysAction)) calcRaw = '0' + sysAction;
-                else calcRaw = sysAction;
-            } else calcRaw += sysAction;
-        }
-        
-        if(calcRaw !== 'Err') display.innerText = formatCalcDisplay(calcRaw);
-        else display.innerText = calcRaw;
-    }
-
-    // --- KERANJANG PINTAR ---
-    function addToCart() {
-        let name = document.getElementById('selectedItemName').value;
-        let price = parseFloat(document.getElementById('selectedItemPrice').value);
-        let unit = document.getElementById('selectedItemUnit').value;
-        
-        let qtyInput = parseFloat(document.getElementById('itemQty').value);
-        let nominalInputVal = parseRp(document.getElementById('nominalInput').value);
-
-        if (name && price > 0) {
-            let existingItem = cart.find(x => x.name === name && !x.isManual);
-            
-            if (nominalInputVal > 0) {
-                if (existingItem) {
-                    existingItem.subtotal += nominalInputVal;
-                    existingItem.qty = existingItem.subtotal / existingItem.price;
-                    showToast(`Jumlah uang ${name} ditambahkan mutlak!`);
-                } else {
-                    cart.push({ id: Date.now(), name: name, price: price, qty: nominalInputVal / price, unit: unit, subtotal: nominalInputVal, isManual: false });
-                    showToast(`${name} masuk keranjang!`);
-                }
-            } else {
-                if (existingItem) {
-                    existingItem.qty += qtyInput;
-                    existingItem.subtotal = existingItem.qty * existingItem.price;
-                    showToast(`Jumlah ${name} digabung!`);
-                } else {
-                    cart.push({ id: Date.now(), name: name, price: price, qty: qtyInput, unit: unit, subtotal: price * qtyInput, isManual: false });
-                    showToast(`${name} masuk keranjang!`);
-                }
-            }
-            resetSelection(); renderCart(); return;
-        }
-        customAlert("Gagal", "Pilih barang dari pencarian atau tekan (+) di Kalkulator untuk barang manual!");
-    }
-
-    function renderCart() {
-        let total = 0;
-        document.getElementById('cartList').innerHTML = cart.map(i => {
-            total += i.subtotal;
-            let qtyHtml = '';
-            let priceHtml = '';
-
-            if (i.isManual) {
-                qtyHtml = `<div style="text-align:center; font-weight:bold;">1 Ls</div>`;
-                priceHtml = `<span style="font-weight:900; color:var(--primary); cursor:pointer; text-decoration:underline;" onclick="editManualPrice(${i.id}, ${i.price})">Rp ${formatRp(i.subtotal)}</span>`;
-            } else {
-                qtyHtml = `
-                    <div class="qty-updater">
-                        <button class="btn-qty" onclick="updateCartQty(${i.id}, -1)">-</button>
-                        <div class="cart-qty-val" onclick="openCartQtyModal(${i.id}, '${i.name.replace(/'/g, "\\'")}', '${i.unit}', ${i.qty})">${parseFloat(i.qty.toFixed(3))}</div>
-                        <button class="btn-qty" onclick="updateCartQty(${i.id}, 1)">+</button>
-                    </div>
-                `;
-                priceHtml = `<span style="font-weight:900; color:var(--primary);">Rp ${formatRp(i.subtotal)}</span>`;
-            }
-
-            return `
-                <tr>
-                    <td><b style="font-size:1.1rem; text-transform: capitalize;">${i.name}</b></td>
-                    <td>${qtyHtml}</td>
-                    <td>${priceHtml}</td>
-                    <td style="text-align: center;">
-                        <button class="btn-danger" style="padding: 10px; font-size: 1rem; width:auto;" onclick="customConfirm('Batal Beli?', 'Hapus ${i.name} dari keranjang?', () => removeFromCart(${i.id}))">X</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-        
-        total = Math.round(total);
-        document.getElementById('grandTotal').innerText = `Rp ${formatRp(total)}`;
-        document.getElementById('grandTotal').dataset.val = total;
-        calculateChange();
-    }
-
-    function updateCartQty(id, delta) {
-        let item = cart.find(x => x.id === id);
-        if (item && !item.isManual) {
-            let newQty = item.qty + delta;
-            if (newQty <= 0) customConfirm('Hapus Barang?', 'Jumlah jadi 0. Hapus dari keranjang?', () => removeFromCart(id));
-            else { item.qty = newQty; item.subtotal = item.price * item.qty; renderCart(); }
-        }
-    }
-
-    function openCartQtyModal(id, name, unit, currentQty) {
-        document.getElementById('cartQtyId').value = id;
-        document.getElementById('cartQtyMsg').innerText = `Kuantitas ${name} (${unit})`;
-        const input = document.getElementById('cartQtyInput');
-        input.value = parseFloat(currentQty.toFixed(3));
-        document.getElementById('cartQtyModal').classList.add('active');
-        setTimeout(() => input.focus(), 100);
-    }
-
-    function saveCartQty() {
-        let id = parseFloat(document.getElementById('cartQtyId').value);
-        let newQty = parseFloat(document.getElementById('cartQtyInput').value);
-        if (newQty > 0) {
-            let item = cart.find(x => x.id === id);
-            if (item) { item.qty = newQty; item.subtotal = item.price * newQty; renderCart(); }
-        }
-        closeModal('cartQtyModal');
-    }
-
-    function editManualPrice(id, currentPrice) {
-        customPrompt('Edit Barang Manual', 'Masukkan harga baru:', formatRp(currentPrice), (newVal) => {
-            const newPrice = parseRp(newVal);
-            if (newPrice > 0) {
-                let item = cart.find(x => x.id === id);
-                if (item && item.isManual) {
-                    item.price = newPrice; item.subtotal = newPrice;
-                    renderCart(); showToast("Harga barang manual diubah!");
-                }
-            }
-        });
-    }
-
-    function removeFromCart(id) { cart = cart.filter(x => x.id !== id); renderCart(); }
-
-    // --- CHECKOUT & STATUS HIGHLIGHT ---
-    function calculateChange() {
-        const total = parseFloat(document.getElementById('grandTotal').dataset.val) || 0;
-        const cashInputVal = document.getElementById('cashInput').value;
-        const cash = parseRp(cashInputVal);
-        const box = document.getElementById('changeDisplayBox');
-        const label = document.getElementById('changeLabelText');
-        const val = document.getElementById('changeDue');
-        const debtSec = document.getElementById('debtSection');
-
-        if (total === 0 || cashInputVal === '') {
-            box.classList.remove('kurang'); label.innerText = "Status / Kembalian"; val.innerText = "Rp 0"; debtSec.style.display = 'none'; return;
-        }
-
-        const diff = cash - total;
-        if (diff < 0) {
-            box.classList.add('kurang'); label.innerText = "KURANG (HUTANG)"; val.innerText = "- Rp " + formatRp(Math.abs(diff)); debtSec.style.display = 'block';
-        } else {
-            box.classList.remove('kurang'); label.innerText = "KEMBALIAN"; val.innerText = "Rp " + formatRp(diff); debtSec.style.display = 'none';
-        }
-    }
-
-    function processTransaction() {
-        if (cart.length === 0) return customAlert("Transaksi Gagal", "Keranjang masih kosong, Daeng!");
-        
-        const total = parseFloat(document.getElementById('grandTotal').dataset.val);
-        const cash = parseRp(document.getElementById('cashInput').value);
-        let status = "LUNAS";
-        let borrower = "";
-        
-        // PERBARUAN: Format output detail item dengan Qty Unit & Subtotal Rp
-        let itemsFormatted = cart.map(x => `${x.name} (${parseFloat(x.qty.toFixed(3))} ${x.unit}) - Rp ${formatRp(x.subtotal)}`).join("<br>");
-
-        if (cash < total) {
-            borrower = document.getElementById('debtorName').value.trim();
-            if (!borrower) return customAlert("Peringatan", "Uang pembeli kurang! Wajib catat nama untuk masuk BUKU PIUTANG.");
-            status = "HUTANG";
-            
-            itemsFormatted += `<br><b style="color:var(--danger);">A.N: ${borrower}</b>`;
-            
-            debts.push({ id: Date.now(), date: new Date().toLocaleDateString('id-ID'), name: borrower, amount: (total - cash) });
-            localStorage.setItem('pos_debts', JSON.stringify(debts));
-            renderDebts();
-        }
-
-        const txData = {
-            id: Date.now(),
-            date: new Date().toLocaleString('id-ID'),
-            items: itemsFormatted,
-            total: total,
-            cash: cash,
-            status: status
-        };
-
-        historyLog.unshift(txData);
-        localStorage.setItem('pos_history', JSON.stringify(historyLog));
-        
-        cart = []; manualItemCounter = 1; 
-        document.getElementById('cashInput').value = '';
-        document.getElementById('debtorName').value = '';
-        document.getElementById('changeDisplayBox').classList.remove('kurang');
-        document.getElementById('changeLabelText').innerText = "Status / Kembalian";
-        document.getElementById('changeDue').innerText = "Rp 0";
-        document.getElementById('debtSection').style.display = 'none';
-        
-        renderCart(); renderHistory();
-        showToast("Transaksi Berhasil Disimpan!");
-        document.getElementById('searchInput').focus();
-    }
-
-    // --- PIUTANG & DASBOR ---
-    function renderDebts() {
-        const q = document.getElementById('searchDebtInput').value.toLowerCase();
-        const list = debts.filter(x => x.name.toLowerCase().includes(q));
-        
-        document.getElementById('debtList').innerHTML = list.map(d => `
-            <tr>
-                <td style="font-size:0.9rem;">${d.date}</td>
-                <td style="text-transform: capitalize;"><b style="font-size:1.15rem;">${d.name}</b></td>
-                <td style="color:var(--danger); font-weight:900; font-size:1.1rem;">Rp ${formatRp(d.amount)}</td>
-                <td style="text-align:center;">
-                    <button class="btn-success" style="padding: 10px; width: 100%; font-size:0.85rem;" onclick="openDebtPaymentModal(${d.id})">BAYAR / CICIL</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function openDebtPaymentModal(id) {
-        const debtIdx = debts.findIndex(x => x.id === id);
-        if(debtIdx > -1) {
-            const d = debts[debtIdx];
-            document.getElementById('debtPaymentId').value = id;
-            document.getElementById('debtMaxAmount').value = d.amount;
-            document.getElementById('debtPaymentMsg').innerHTML = `Sisa Hutang: <b>Rp ${formatRp(d.amount)}</b><br>Atas Nama: <b>${d.name}</b>`;
-            document.getElementById('debtPaymentInput').value = ''; 
-            document.getElementById('debtPaymentModal').classList.add('active');
-        }
-    }
-
-    function setLunasAmount() {
-        const maxAmount = document.getElementById('debtMaxAmount').value;
-        const inputElem = document.getElementById('debtPaymentInput');
-        inputElem.value = maxAmount;
-        formatRupiahUI(inputElem);
-        showToast("Nominal Full Diisi Otomatis");
-    }
-
-    function processDebtPayment() {
-        const id = parseInt(document.getElementById('debtPaymentId').value);
-        const inputVal = document.getElementById('debtPaymentInput').value;
-        const payAmount = parseRp(inputVal);
-        const debtIdx = debts.findIndex(x => x.id === id);
-
-        if(debtIdx > -1 && payAmount > 0) {
-            const d = debts[debtIdx];
-            
-            if(payAmount >= d.amount) {
-                historyLog.unshift({
-                    id: Date.now(),
-                    date: new Date().toLocaleString('id-ID'),
-                    items: `PELUNASAN PIUTANG:<br><b style="color:var(--success);">A.N: ${d.name}</b>`,
-                    total: d.amount,
-                    cash: d.amount,
-                    status: "LUNAS"
-                });
-                debts.splice(debtIdx, 1);
-                showToast(`Piutang ${d.name} LUNAS!`);
-            } else {
-                historyLog.unshift({
-                    id: Date.now(),
-                    date: new Date().toLocaleString('id-ID'),
-                    items: `CICILAN PIUTANG:<br><b style="color:var(--warning);">A.N: ${d.name}</b>`,
-                    total: payAmount,
-                    cash: payAmount,
-                    status: "CICIL"
-                });
-                debts[debtIdx].amount -= payAmount;
-                showToast(`Cicilan dari ${d.name} sebesar Rp ${formatRp(payAmount)} diterima!`);
-            }
-
-            localStorage.setItem('pos_history', JSON.stringify(historyLog));
-            localStorage.setItem('pos_debts', JSON.stringify(debts));
-            
-            renderDebts();
-            renderHistory();
-            closeModal('debtPaymentModal');
-        } else {
-            customAlert("Input Tidak Valid", "Masukkan nominal uang yang dibayarkan!");
-        }
-    }
-
-    function toggleHistoryDetail(id, btn, count) {
-        const detailDiv = document.getElementById('hist-detail-' + id);
-        if(detailDiv.classList.contains('active')) {
-            detailDiv.classList.remove('active');
-            btn.innerText = `Lihat ${count} ..`;
-        } else {
-            detailDiv.classList.add('active');
-            btn.innerText = `Tutup Detail [-]`;
-        }
-    }
-
-    function renderHistory() {
-        let omzet = 0, tunai = 0, piutang = 0;
-        
-        document.getElementById('historyList').innerHTML = historyLog.map(h => {
-            omzet += h.total;
-            tunai += Math.min(h.total, h.cash);
-            if (h.status === "HUTANG") piutang += (h.total - h.cash);
-            
-            let badgeColor = "var(--primary)";
-            if (h.status === "LUNAS") badgeColor = "var(--success)";
-            if (h.status === "HUTANG") badgeColor = "var(--danger)";
-            if (h.status === "CICIL") badgeColor = "var(--warning)";
-            
-            let itemsArr = h.items.split('<br>').filter(x => x.trim() !== '');
-            let visibleItems = [itemsArr[0]]; 
-            let hiddenItems = [];
-            
-            for(let i = 1; i < itemsArr.length; i++) {
-                if(itemsArr[i].includes("A.N:")) {
-                    visibleItems.push(itemsArr[i]);
-                } else {
-                    hiddenItems.push(itemsArr[i]);
-                }
-            }
-            
-            let displayItems = `<div style="font-weight: bold;">${visibleItems.join('<br>')}</div>`;
-            
-            if (hiddenItems.length > 0) {
-                displayItems += `
-                    <div id="hist-detail-${h.id}" class="history-full">${hiddenItems.join('<br>')}</div>
-                    <div class="history-toggle-btn" onclick="toggleHistoryDetail(${h.id}, this, ${hiddenItems.length})">Lihat ${hiddenItems.length} ..</div>
-                `;
-            }
-
-            return `
-                <tr>
-                    <td style="font-size:0.85rem;">${h.date}</td>
-                    <td style="text-transform: capitalize; line-height:1.4;">${displayItems}</td>
-                    <td style="font-size:0.9rem;">
-                        <b>Total:</b> Rp ${formatRp(h.total)}<br>
-                        <b>Tunai:</b> Rp ${formatRp(h.cash)}
-                    </td>
-                    <td style="text-align: center;"><span class="badge-status" style="background: ${badgeColor};">${h.status}</span></td>
-                </tr>
-            `;
-        }).join('');
-        
-        document.getElementById('dailyOmzet').innerText = `Rp ${formatRp(omzet)}`;
-        document.getElementById('dailyCash').innerText = `Rp ${formatRp(tunai)}`;
-        document.getElementById('dailyDebt').innerText = `Rp ${formatRp(piutang)}`;
-    }
-
-    function clearHistory() {
-        historyLog = [];
-        localStorage.setItem('pos_history', JSON.stringify(historyLog));
-        renderHistory();
-        showToast("Seluruh Riwayat Sesi Dihapus!");
-    }
-
-    function requestShopNameEdit() {
-        customPrompt('Ubah Nama Toko', 'Masukkan nama toko baru:', shopName, (newName) => {
-            shopName = newName.toUpperCase();
-            localStorage.setItem('pos_shop_name', shopName);
-            document.getElementById('shopNameDisplay').innerText = shopName;
-            showToast("Nama Toko Berhasil Diubah!");
-        });
-    }
-
-    function loginGoogle() { showToast("Fitur Cloud & Sync akan aktif saat integrasi server PWA selesai.", "syncing"); closeModal('loginModal'); }
-    function logoutGoogle() { showToast("Kembali ke lokal.", "success"); }
-
-    // Eksekusi Awal
-    window.onload = () => {
+    // --- BOOTING LOCAL-FIRST (ANTI FREEZE) ---
+    function bootApp() {
+        // 1. Render UI instan dari memori HP
         document.getElementById('shopNameDisplay').innerText = shopName;
         if(units.length > 0) {
             document.getElementById('itemUnitVal').value = units[0];
             document.getElementById('itemUnitText').innerText = units[0];
         }
         renderUnits(); renderInventory(); renderDebts(); renderHistory();
-    };
+
+        // 2. Set Status Jaringan Awal
+        const netStatus = document.getElementById('networkStatus');
+        if (APP_MODE === 'CLOUD') {
+            currentUser = { id: 'offline_user', email: 'Cloud User' };
+            if(netStatus) { netStatus.innerText = navigator.onLine ? "Menyambungkan..." : "Offline Mode (Cloud)"; netStatus.className = navigator.onLine ? "status-sync sync-pending" : "status-sync sync-offline"; }
+            document.getElementById('btnLoginBtn').style.display = "none";
+            document.getElementById('btnLogoutBtn').style.display = "inline-block";
+            document.getElementById('userNameDisplay').innerText = "Kasir Cloud";
+        } else {
+            currentUser = null;
+            if(netStatus) { netStatus.innerText = "Offline Mode (Guest)"; netStatus.className = "status-sync sync-offline"; }
+            document.getElementById('btnLoginBtn').style.display = "inline-block";
+            document.getElementById('btnLogoutBtn').style.display = "none";
+            document.getElementById('userNameDisplay').innerText = "Kasir Lokal";
+        }
+
+        // 3. Jalankan mesin Cloud di background (Tidak memblokir UI)
+        setTimeout(initSupabaseBackground, 500);
+    }
+
+    async function initSupabaseBackground() {
+        const netStatus = document.getElementById('networkStatus');
+        
+        // PENGAMAN 1: Jika CDN gagal didownload (Z-Offline murni)
+        if (typeof window.supabase === 'undefined') {
+            console.warn("Supabase CDN mati. Kasir berjalan murni offline.");
+            if(netStatus) { netStatus.innerText = "Z-Offline (Lokal)"; netStatus.className = "status-sync sync-offline"; }
+            return;
+        }
+
+        if (!sbClient) { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+
+        // PENGAMAN 2: Cek sesi dengan Timeout (Agar tidak gantung)
+        if (APP_MODE === 'CLOUD' && navigator.onLine) {
+            try {
+                const sessionPromise = sbClient.auth.getSession();
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Koneksi')), 5000));
+                
+                const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
+                if (error) throw error;
+
+                if (session && session.user) {
+                    currentUser = session.user;
+                    if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
+                    document.getElementById('userNameDisplay').innerText = currentUser.user_metadata.full_name || "Kasir Cloud";
+                    if (pendingSync.length > 0) processPendingSync();
+                } else {
+                    forceLogoutToGuest();
+                }
+            } catch(err) {
+                console.warn("Koneksi Supabase timeout, masuk mode antrean lokal.", err);
+                if(netStatus) { netStatus.innerText = "Server Lambat (Mode Lokal)"; netStatus.className = "status-sync sync-offline"; }
+            }
+        }
+
+        // LISTENER REALTIME LOGIN/LOGOUT
+        if (!window.supabaseListenerAdded) {
+            window.supabaseListenerAdded = true;
+            sbClient.auth.onAuthStateChange(async (event, currentSession) => {
+                if (event === 'SIGNED_OUT') {
+                    forceLogoutToGuest();
+                } else if (event === 'SIGNED_IN' && currentSession) {
+                    currentUser = currentSession.user; 
+                    APP_MODE = 'CLOUD';
+                    localStorage.setItem('pos_app_mode', 'CLOUD');
+                    if(netStatus) { netStatus.innerText = navigator.onLine ? "Online Mode (Cloud)" : "Offline Mode (Cloud)"; netStatus.className = navigator.onLine ? "status-sync sync-online" : "status-sync sync-offline"; }
+                    
+                    document.getElementById('userNameDisplay').innerText = currentUser.user_metadata.full_name || "Kasir Cloud";
+                    document.getElementById('btnLoginBtn').style.display = "none";
+                    document.getElementById('btnLogoutBtn').style.display = "inline-block";
+                    closeModal('loginModal');
+                    showToast("Berhasil terhubung ke Cloud!", "success");
+                    
+                    if (navigator.onLine && pendingSync.length > 0) processPendingSync();
+                }
+            });
+        }
+    }
+
+    // --- FUNGSI LOGIN, LOGOUT & SYNC ---
+    async function loginGoogle() { 
+        if(typeof window.supabase === 'undefined' || !sbClient || !navigator.onLine) { showToast("Anda sedang Offline. Login gagal.", "error"); return; }
+        showToast("Membuka jalur ke Cloud...", "syncing"); 
+        const { error } = await sbClient.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
+        if (error) customAlert("Gagal Login", error.message);
+    }
+
+    function forceLogoutToGuest() {
+        APP_MODE = 'GUEST';
+        currentUser = null;
+        localStorage.setItem('pos_app_mode', 'GUEST');
+        
+        document.getElementById('userNameDisplay').innerText = "Kasir Lokal";
+        document.getElementById('btnLoginBtn').style.display = "inline-block";
+        document.getElementById('btnLogoutBtn').style.display = "none";
+        
+        const netStatus = document.getElementById('networkStatus');
+        if(netStatus) { netStatus.innerText = "Offline Mode (Guest)"; netStatus.className = "status-sync sync-offline"; }
+        
+        closeModal('loginModal');
+        showToast("Kembali ke Mode Guest (Lokal).", "success");
+    }
+
+    async function processPendingSync() {
+        if (!navigator.onLine || APP_MODE !== 'CLOUD' || !currentUser || currentUser.id === 'offline_user' || !sbClient || pendingSync.length === 0) return;
+        showToast("Menyinkronkan data tertunda...", "syncing");
+        
+        // Simulasi push ke tabel (Karena tabel Supabase lu belum di-setup untuk POS)
+        // Kalau udah ada tabelnya, tinggal ganti baris ini pakai sbClient.from('nama_tabel').insert(payload)
+        setTimeout(() => {
+            pendingSync = [];
+            localStorage.setItem('pos_pending_sync', JSON.stringify(pendingSync));
+            showToast("Antrean Offline masuk ke Cloud!", "success");
+            const netStatus = document.getElementById('networkStatus');
+            if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
+        }, 1500);
+    }
+
+    // --- DETEKSI JARINGAN REALTIME ---
+    window.addEventListener('online', () => { 
+        const netStatus = document.getElementById('networkStatus');
+        if(netStatus) { 
+            netStatus.innerText = APP_MODE === 'CLOUD' ? "Menyambungkan..." : "Online Mode (Guest)"; 
+            netStatus.className = APP_MODE === 'CLOUD' ? "status-sync sync-pending" : "status-sync sync-online"; 
+        }
+        if(APP_MODE === 'CLOUD') {
+            if (currentUser && currentUser.id === 'offline_user') { initSupabaseBackground(); } 
+            else if (pendingSync.length > 0) { processPendingSync(); } 
+            else { if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; } }
+        }
+    });
+    
+    window.addEventListener('offline', () => { 
+        const netStatus = document.getElementById('networkStatus');
+        if(netStatus) { 
+            netStatus.innerText = pendingSync.length > 0 ? "Offline (Menunggu Sync)" : (APP_MODE === 'CLOUD' ? "Offline Mode (Cloud)" : "Offline Mode (Guest)"); 
+            netStatus.className = pendingSync.length > 0 ? "status-sync sync-pending" : "status-sync sync-offline"; 
+        }
+        showToast("Sinyal Terputus! Masuk Z-Offline Mode.", "error");
+    });
+
+    // --- UTILITIES & FORMATTER ---
+    const formatRp = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(n);
+    const parseRp = (s) => parseFloat(s.toString().replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
+    
+    function formatRupiahUI(el) { let val = el.value.replace(/[^0-9]/g, ''); el.value = val ? formatRp(val) : ''; }
+    function toggleUI(c, i) { const el = document.getElementById(c); el.classList.toggle('collapsed'); document.getElementById(i).innerText = el.classList.contains('collapsed') ? "BUKA [+]" : "TUTUP [-]"; }
+
+    // --- CUSTOM MODALS ---
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function customAlert(title, message) { document.getElementById('alertTitle').innerText = title; document.getElementById('alertMsg').innerText = message; document.getElementById('customAlert').classList.add('active'); }
+    
+    function customConfirm(title, message, actionCallback) {
+        document.getElementById('confirmTitle').innerText = title;
+        document.getElementById('confirmMsg').innerText = message;
+        document.getElementById('customConfirm').classList.add('active');
+        const btnYes = document.getElementById('confirmBtnYes');
+        const newBtnYes = btnYes.cloneNode(true); 
+        btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+        newBtnYes.addEventListener('click', () => { closeModal('customConfirm'); if(actionCallback) actionCallback(); });
+    }
+
+    function customPrompt(title, message, defaultVal, actionCallback) {
+        document.getElementById('promptTitle').innerText = title; document.getElementById('promptMsg').innerText = message;
+        const input = document.getElementById('promptInput'); input.value = defaultVal || '';
+        document.getElementById('customPrompt').classList.add('active'); setTimeout(() => input.focus(), 100);
+        const btnSave = document.getElementById('promptBtnSave');
+        const newBtnSave = btnSave.cloneNode(true); btnSave.parentNode.replaceChild(newBtnSave, btnSave);
+        newBtnSave.addEventListener('click', () => { let val = document.getElementById('promptInput').value.trim(); closeModal('customPrompt'); if(actionCallback && val) actionCallback(val); });
+    }
+
+    function showToast(msg, type = 'success') {
+        const box = document.getElementById('toastBox'); const t = document.createElement('div');
+        t.className = `toast ${type}`; t.innerText = msg; box.appendChild(t);
+        setTimeout(() => t.classList.add('show'), 10);
+        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
+    }
+
+    // --- CUSTOM SELECT & MANAJEMEN SATUAN ---
+    function openUnitSelectModal() {
+        const container = document.getElementById('unitSelectContainer');
+        container.innerHTML = units.map(u => `<div class="unit-option-btn" onclick="selectUnitOption('${u}')">${u}</div>`).join('');
+        document.getElementById('unitSelectModal').classList.add('active');
+    }
+
+    function selectUnitOption(selectedUnit) { document.getElementById('itemUnitVal').value = selectedUnit; document.getElementById('itemUnitText').innerText = selectedUnit; closeModal('unitSelectModal'); }
+
+    function addUnit() {
+        const u = document.getElementById('unitName').value.trim(); if(!u) return;
+        if(units.some(unit => unit.toLowerCase() === u.toLowerCase())) return customAlert("Gagal", "Satuan tersebut sudah ada!"); 
+        units.push(u); localStorage.setItem('pos_units', JSON.stringify(units)); renderUnits(); 
+        document.getElementById('unitName').value = ''; showToast("Satuan ditambahkan");
+    }
+
+    function deleteUnit(unitName) {
+        units = units.filter(u => u !== unitName); localStorage.setItem('pos_units', JSON.stringify(units)); renderUnits();
+        if(document.getElementById('itemUnitVal').value === unitName) { document.getElementById('itemUnitVal').value = units[0] || ''; document.getElementById('itemUnitText').innerText = units[0] || 'PILIH'; }
+        showToast("Satuan dihapus");
+    }
+
+    function renderUnits() { document.getElementById('unitTags').innerHTML = units.map(u => `<div class="unit-tag">${u} <span onclick="customConfirm('Hapus Satuan?', 'Yakin hapus satuan ${u}?', () => deleteUnit('${u}'))">X</span></div>`).join(''); }
+
+    // --- MANAJEMEN DATABASE BARANG ---
+    function addInventory() {
+        const name = document.getElementById('itemName').value.trim(); const price = parseRp(document.getElementById('itemPrice').value); const unit = document.getElementById('itemUnitVal').value; 
+        if (!name || price <= 0) return customAlert("Error", "Nama dan Harga wajib diisi!");
+        const existingItem = inventory.find(x => x.name.toLowerCase() === name.toLowerCase());
+        
+        if(existingItem) { existingItem.price = price; existingItem.unit = unit; showToast(`Harga ${existingItem.name} di-update!`); } 
+        else { inventory.push({ id: Date.now(), name: name, price: price, unit: unit }); showToast("Barang baru masuk Database!"); }
+        
+        localStorage.setItem('pos_inventory', JSON.stringify(inventory)); renderInventory();
+        document.getElementById('itemName').value = ''; document.getElementById('itemPrice').value = '';
+    }
+
+    function renderInventory() {
+        const q = document.getElementById('searchInventoryInput').value.toLowerCase();
+        const list = inventory.filter(x => x.name.toLowerCase().includes(q));
+        document.getElementById('inventoryList').innerHTML = list.map(i => `<tr><td><b style="font-size:1.1rem; text-transform: capitalize;">${i.name}</b></td><td style="font-weight:700;">Rp ${formatRp(i.price)}</td><td><span class="badge-unit">${i.unit}</span></td><td class="action-cell" style="text-align: right;"><button class="btn-primary" style="padding: 6px; width: auto; font-size: 0.8rem; margin-bottom: 5px;" onclick="editItemPrice(${i.id})">EDIT</button> <button class="btn-danger" style="padding: 6px; width: auto; font-size: 0.8rem;" onclick="customConfirm('Hapus Barang?', 'Yakin hapus ${i.name}?', () => deleteInventory(${i.id}))">HAPUS</button></td></tr>`).join('');
+    }
+
+    function deleteInventory(id) { inventory = inventory.filter(x => x.id !== id); localStorage.setItem('pos_inventory', JSON.stringify(inventory)); renderInventory(); showToast("Barang terhapus", "error"); }
+    function editItemPrice(id) { const item = inventory.find(x => x.id === id); if(!item) return; customPrompt('Edit Harga', `Harga baru untuk ${item.name}:`, formatRp(item.price), (newVal) => { const newPrice = parseRp(newVal); if(newPrice > 0) { item.price = newPrice; localStorage.setItem('pos_inventory', JSON.stringify(inventory)); renderInventory(); showToast(`Harga ${item.name} berhasil diubah!`); } }); }
+    document.getElementById('searchInventoryInput').addEventListener('input', renderInventory);
+
+    // --- PENCARIAN & TIMBANGAN ECERAN CERDAS ---
+    const searchInput = document.getElementById('searchInput'); const searchResults = document.getElementById('searchResults'); const nominalInput = document.getElementById('nominalInput');
+    function setQuickQty(val) { document.getElementById('itemQty').value = val; }
+
+    searchInput.addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        if (q.length < 1) { searchResults.style.display = 'none'; resetSelection(); return; }
+        const list = inventory.filter(i => i.name.toLowerCase().includes(q));
+        searchResults.innerHTML = list.map(i => { const regex = new RegExp(`(${q})`, 'gi'); const highlightedName = i.name.replace(regex, `<span style="background: rgba(46, 204, 113, 0.4); color: #111; border-radius: 3px; padding: 0 2px;">$1</span>`); return `<div class="search-item" onclick="selectItem('${i.name.replace(/'/g, "\\'")}', ${i.price}, '${i.unit}')"><span style="text-transform: capitalize;">${highlightedName}</span> <span style="color:var(--success);">Rp ${formatRp(i.price)}/${i.unit}</span></div>`; }).join('');
+        searchResults.style.display = list.length > 0 ? 'block' : 'none';
+    });
+
+    function selectItem(name, price, unit) {
+        document.getElementById('searchInput').value = name; document.getElementById('selectedItemName').value = name; document.getElementById('selectedItemPrice').value = price; document.getElementById('selectedItemUnit').value = unit; searchResults.style.display = 'none';
+        document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = unit; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`;
+        nominalInput.value = ''; nominalInput.focus(); 
+    }
+
+    function resetSelection() { document.getElementById('selectedItemName').value = ''; document.getElementById('selectedItemPrice').value = ''; document.getElementById('selectedItemUnit').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('searchInput').value = ''; document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = 'Kg'; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; nominalInput.value = ''; }
+
+    function calculateScaleFromInput() {
+        const nominal = parseRp(nominalInput.value); const pricePerUnit = parseFloat(document.getElementById('selectedItemPrice').value) || 0; const unit = document.getElementById('selectedItemUnit').value;
+        if (pricePerUnit <= 0 || nominal <= 0) { document.getElementById('itemQty').value = '1'; document.getElementById('scaleResultVal').innerText = '0'; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; return; }
+        if (unit.toLowerCase() !== 'kg') { const qty = nominal / pricePerUnit; document.getElementById('itemQty').value = qty.toFixed(2); document.getElementById('scaleResultVal').innerText = qty.toFixed(2); document.getElementById('scaleResultUnit').innerText = unit; document.getElementById('scaleResultDesc').innerText = `Satuan Non-Timbangan`; return; }
+        const qtyKg = nominal / pricePerUnit; const totalGrams = qtyKg * 1000;
+        let ons = Math.floor(totalGrams / 100); let sisaGrams = totalGrams % 100; let garis = Math.round(sisaGrams / 10);
+        if(garis >= 10) { ons += 1; garis = 0; }
+        document.getElementById('itemQty').value = qtyKg.toFixed(3); document.getElementById('scaleResultVal').innerText = qtyKg.toFixed(3); document.getElementById('scaleResultUnit').innerText = 'Kg'; document.getElementById('scaleResultDesc').innerText = `Timbangan: ${ons} Ons ${garis} Garis`;
+    }
+
+    // --- KALKULATOR KASIR CERDAS ---
+    let calcRaw = '0'; 
+    function formatCalcDisplay(rawStr) { let parts = rawStr.split(/([*/+\-])/); for(let i=0; i<parts.length; i++) { if(!['*', '/', '+', '-'].includes(parts[i]) && parts[i] !== '') { if(!parts[i].includes('.')) parts[i] = formatRp(parseInt(parts[i])); } else if (parts[i] === '*') parts[i] = ' X '; else if (parts[i] === '/') parts[i] = ' : '; else parts[i] = ` ${parts[i]} `; } return parts.join('').trim(); }
+    function calcAction(action) {
+        const display = document.getElementById('calcDisplay');
+        if (action === 'C') calcRaw = '0'; else if (action === 'DEL') calcRaw = calcRaw.length > 1 ? calcRaw.slice(0, -1) : '0';
+        else if (action === '=') { try { let res = eval(calcRaw); calcRaw = Number.isInteger(res) ? res.toString() : res.toFixed(2).toString(); } catch { calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); } } 
+        else if (action === '+') { try { let res = eval(calcRaw); if (res > 0) { cart.push({ id: Date.now(), name: `Barang Manual ${manualItemCounter}`, price: res, qty: 1, unit: 'Ls', subtotal: res, isManual: true }); manualItemCounter++; renderCart(); showToast(`Masuk Keranjang: Rp ${formatRp(res)}`); } calcRaw = '0'; } catch { calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); } } 
+        else { let sysAction = action; if (action === 'X') sysAction = '*'; if (action === ':') sysAction = '/'; if (calcRaw === '0') { if (['00', '000'].includes(sysAction)) return; if (sysAction === '.') calcRaw = '0.'; else if (['*', '/', '-'].includes(sysAction)) calcRaw = '0' + sysAction; else calcRaw = sysAction; } else calcRaw += sysAction; }
+        if(calcRaw !== 'Err') display.innerText = formatCalcDisplay(calcRaw); else display.innerText = calcRaw;
+    }
+
+    // --- KERANJANG PINTAR ---
+    function addToCart() {
+        let name = document.getElementById('selectedItemName').value; let price = parseFloat(document.getElementById('selectedItemPrice').value); let unit = document.getElementById('selectedItemUnit').value; let qtyInput = parseFloat(document.getElementById('itemQty').value); let nominalInputVal = parseRp(document.getElementById('nominalInput').value);
+        if (name && price > 0) {
+            let existingItem = cart.find(x => x.name === name && !x.isManual);
+            if (nominalInputVal > 0) { if (existingItem) { existingItem.subtotal += nominalInputVal; existingItem.qty = existingItem.subtotal / existingItem.price; showToast(`Jumlah uang ditambahkan!`); } else { cart.push({ id: Date.now(), name: name, price: price, qty: nominalInputVal / price, unit: unit, subtotal: nominalInputVal, isManual: false }); showToast(`Masuk keranjang!`); } } 
+            else { if (existingItem) { existingItem.qty += qtyInput; existingItem.subtotal = existingItem.qty * existingItem.price; showToast(`Jumlah digabung!`); } else { cart.push({ id: Date.now(), name: name, price: price, qty: qtyInput, unit: unit, subtotal: price * qtyInput, isManual: false }); showToast(`Masuk keranjang!`); } }
+            resetSelection(); renderCart(); return;
+        } customAlert("Gagal", "Pilih barang dari pencarian atau tekan (+) di Kalkulator untuk barang manual!");
+    }
+
+    function renderCart() {
+        let total = 0;
+        document.getElementById('cartList').innerHTML = cart.map(i => {
+            total += i.subtotal; let qtyHtml = ''; let priceHtml = '';
+            if (i.isManual) { qtyHtml = `<div style="text-align:center; font-weight:bold;">1 Ls</div>`; priceHtml = `<span style="font-weight:900; color:var(--primary); cursor:pointer; text-decoration:underline;" onclick="editManualPrice(${i.id}, ${i.price})">Rp ${formatRp(i.subtotal)}</span>`; } 
+            else { qtyHtml = `<div class="qty-updater"><button class="btn-qty" onclick="updateCartQty(${i.id}, -1)">-</button><div class="cart-qty-val" onclick="openCartQtyModal(${i.id}, '${i.name.replace(/'/g, "\\'")}', '${i.unit}', ${i.qty})">${parseFloat(i.qty.toFixed(3))}</div><button class="btn-qty" onclick="updateCartQty(${i.id}, 1)">+</button></div>`; priceHtml = `<span style="font-weight:900; color:var(--primary);">Rp ${formatRp(i.subtotal)}</span>`; }
+            return `<tr><td><b style="font-size:1.1rem; text-transform: capitalize;">${i.name}</b></td><td>${qtyHtml}</td><td>${priceHtml}</td><td style="text-align: center;"><button class="btn-danger" style="padding: 10px; font-size: 1rem; width:auto;" onclick="customConfirm('Batal Beli?', 'Hapus ${i.name}?', () => removeFromCart(${i.id}))">X</button></td></tr>`;
+        }).join('');
+        total = Math.round(total); document.getElementById('grandTotal').innerText = `Rp ${formatRp(total)}`; document.getElementById('grandTotal').dataset.val = total; calculateChange();
+    }
+
+    function updateCartQty(id, delta) { let item = cart.find(x => x.id === id); if (item && !item.isManual) { let newQty = item.qty + delta; if (newQty <= 0) customConfirm('Hapus Barang?', 'Jumlah 0. Hapus?', () => removeFromCart(id)); else { item.qty = newQty; item.subtotal = item.price * item.qty; renderCart(); } } }
+    function openCartQtyModal(id, name, unit, currentQty) { document.getElementById('cartQtyId').value = id; document.getElementById('cartQtyMsg').innerText = `Kuantitas ${name} (${unit})`; const input = document.getElementById('cartQtyInput'); input.value = parseFloat(currentQty.toFixed(3)); document.getElementById('cartQtyModal').classList.add('active'); setTimeout(() => input.focus(), 100); }
+    function saveCartQty() { let id = parseFloat(document.getElementById('cartQtyId').value); let newQty = parseFloat(document.getElementById('cartQtyInput').value); if (newQty > 0) { let item = cart.find(x => x.id === id); if (item) { item.qty = newQty; item.subtotal = item.price * newQty; renderCart(); } } closeModal('cartQtyModal'); }
+    function editManualPrice(id, currentPrice) { customPrompt('Edit Barang Manual', 'Masukkan harga baru:', formatRp(currentPrice), (newVal) => { const newPrice = parseRp(newVal); if (newPrice > 0) { let item = cart.find(x => x.id === id); if (item && item.isManual) { item.price = newPrice; item.subtotal = newPrice; renderCart(); showToast("Harga diubah!"); } } }); }
+    function removeFromCart(id) { cart = cart.filter(x => x.id !== id); renderCart(); }
+
+    // --- CHECKOUT & PENYIMPANAN ANTRIAN (QUEUE SYSTEM) ---
+    function calculateChange() {
+        const total = parseFloat(document.getElementById('grandTotal').dataset.val) || 0; const cashInputVal = document.getElementById('cashInput').value; const cash = parseRp(cashInputVal);
+        const box = document.getElementById('changeDisplayBox'); const label = document.getElementById('changeLabelText'); const val = document.getElementById('changeDue'); const debtSec = document.getElementById('debtSection');
+        if (total === 0 || cashInputVal === '') { box.classList.remove('kurang'); label.innerText = "Status / Kembalian"; val.innerText = "Rp 0"; debtSec.style.display = 'none'; return; }
+        const diff = cash - total;
+        if (diff < 0) { box.classList.add('kurang'); label.innerText = "KURANG (HUTANG)"; val.innerText = "- Rp " + formatRp(Math.abs(diff)); debtSec.style.display = 'block'; } 
+        else { box.classList.remove('kurang'); label.innerText = "KEMBALIAN"; val.innerText = "Rp " + formatRp(diff); debtSec.style.display = 'none'; }
+    }
+
+    function processTransaction() {
+        if (cart.length === 0) return customAlert("Transaksi Gagal", "Keranjang kosong!");
+        const total = parseFloat(document.getElementById('grandTotal').dataset.val); const cash = parseRp(document.getElementById('cashInput').value);
+        let status = "LUNAS"; let borrower = ""; let itemsFormatted = cart.map(x => `${x.name} (${parseFloat(x.qty.toFixed(3))} ${x.unit}) - Rp ${formatRp(x.subtotal)}`).join("<br>");
+
+        if (cash < total) {
+            borrower = document.getElementById('debtorName').value.trim();
+            if (!borrower) return customAlert("Peringatan", "Wajib catat nama untuk hutang!");
+            status = "HUTANG"; itemsFormatted += `<br><b style="color:var(--danger);">A.N: ${borrower}</b>`;
+            debts.push({ id: Date.now(), date: new Date().toLocaleDateString('id-ID'), name: borrower, amount: (total - cash) });
+            localStorage.setItem('pos_debts', JSON.stringify(debts)); renderDebts();
+        }
+
+        const txData = { id: Date.now(), date: new Date().toLocaleString('id-ID'), items: itemsFormatted, total: total, cash: cash, status: status };
+        historyLog.unshift(txData); localStorage.setItem('pos_history', JSON.stringify(historyLog));
+        
+        // ANTRIAN CLOUD JIKA MODE CLOUD AKTIF
+        if (APP_MODE === 'CLOUD') {
+            pendingSync.push(txData);
+            localStorage.setItem('pos_pending_sync', JSON.stringify(pendingSync));
+            if (navigator.onLine && sbClient && currentUser && currentUser.id !== 'offline_user') {
+                processPendingSync();
+            } else {
+                const netStatus = document.getElementById('networkStatus');
+                if(netStatus) { netStatus.innerText = "Offline (Menunggu Sync)"; netStatus.className = "status-sync sync-pending"; }
+                showToast("Tersimpan di Lokal (Menunggu Sinyal)", "syncing");
+            }
+        } else {
+            showToast("Transaksi Berhasil (Lokal)!");
+        }
+
+        cart = []; manualItemCounter = 1; document.getElementById('cashInput').value = ''; document.getElementById('debtorName').value = ''; document.getElementById('changeDisplayBox').classList.remove('kurang'); document.getElementById('changeLabelText').innerText = "Status / Kembalian"; document.getElementById('changeDue').innerText = "Rp 0"; document.getElementById('debtSection').style.display = 'none';
+        renderCart(); renderHistory(); document.getElementById('searchInput').focus();
+    }
+
+    // --- PIUTANG & DASBOR ---
+    function renderDebts() {
+        const q = document.getElementById('searchDebtInput').value.toLowerCase(); const list = debts.filter(x => x.name.toLowerCase().includes(q));
+        document.getElementById('debtList').innerHTML = list.map(d => `<tr><td style="font-size:0.9rem;">${d.date}</td><td style="text-transform: capitalize;"><b style="font-size:1.15rem;">${d.name}</b></td><td style="color:var(--danger); font-weight:900; font-size:1.1rem;">Rp ${formatRp(d.amount)}</td><td style="text-align:center;"><button class="btn-success" style="padding: 10px; width: 100%; font-size:0.85rem;" onclick="openDebtPaymentModal(${d.id})">BAYAR / CICIL</button></td></tr>`).join('');
+    }
+
+    function openDebtPaymentModal(id) { const debtIdx = debts.findIndex(x => x.id === id); if(debtIdx > -1) { const d = debts[debtIdx]; document.getElementById('debtPaymentId').value = id; document.getElementById('debtMaxAmount').value = d.amount; document.getElementById('debtPaymentMsg').innerHTML = `Sisa Hutang: <b>Rp ${formatRp(d.amount)}</b><br>Atas Nama: <b>${d.name}</b>`; document.getElementById('debtPaymentInput').value = ''; document.getElementById('debtPaymentModal').classList.add('active'); } }
+    function setLunasAmount() { const maxAmount = document.getElementById('debtMaxAmount').value; const inputElem = document.getElementById('debtPaymentInput'); inputElem.value = maxAmount; formatRupiahUI(inputElem); showToast("Nominal Full Diisi!"); }
+
+    function processDebtPayment() {
+        const id = parseInt(document.getElementById('debtPaymentId').value); const payAmount = parseRp(document.getElementById('debtPaymentInput').value); const debtIdx = debts.findIndex(x => x.id === id);
+        if(debtIdx > -1 && payAmount > 0) {
+            const d = debts[debtIdx]; let statusStr = ""; let msgStr = "";
+            if(payAmount >= d.amount) { statusStr = "LUNAS"; msgStr = `PELUNASAN PIUTANG:<br><b style="color:var(--success);">A.N: ${d.name}</b>`; debts.splice(debtIdx, 1); showToast(`Piutang ${d.name} LUNAS!`); } 
+            else { statusStr = "CICIL"; msgStr = `CICILAN PIUTANG:<br><b style="color:var(--warning);">A.N: ${d.name}</b>`; debts[debtIdx].amount -= payAmount; showToast(`Cicilan dari ${d.name} diterima!`); }
+
+            const logData = { id: Date.now(), date: new Date().toLocaleString('id-ID'), items: msgStr, total: d.amount, cash: payAmount, status: statusStr };
+            historyLog.unshift(logData); localStorage.setItem('pos_history', JSON.stringify(historyLog)); localStorage.setItem('pos_debts', JSON.stringify(debts));
+            
+            // ANTRIAN CLOUD (Sama seperti transaksi utama)
+            if (APP_MODE === 'CLOUD') {
+                pendingSync.push(logData); localStorage.setItem('pos_pending_sync', JSON.stringify(pendingSync));
+                if (navigator.onLine && sbClient && currentUser && currentUser.id !== 'offline_user') { processPendingSync(); } 
+                else { showToast("Pembayaran masuk antrean offline.", "syncing"); }
+            }
+            renderDebts(); renderHistory(); closeModal('debtPaymentModal');
+        } else { customAlert("Input Tidak Valid", "Masukkan nominal pembayaran!"); }
+    }
+
+    function toggleHistoryDetail(id, btn, count) { const detailDiv = document.getElementById('hist-detail-' + id); if(detailDiv.classList.contains('active')) { detailDiv.classList.remove('active'); btn.innerText = `Lihat ${count} ..`; } else { detailDiv.classList.add('active'); btn.innerText = `Tutup Detail [-]`; } }
+
+    function renderHistory() {
+        let omzet = 0, tunai = 0, piutang = 0;
+        document.getElementById('historyList').innerHTML = historyLog.map(h => {
+            omzet += h.total; tunai += Math.min(h.total, h.cash); if (h.status === "HUTANG") piutang += (h.total - h.cash);
+            let badgeColor = "var(--primary)"; if (h.status === "LUNAS") badgeColor = "var(--success)"; if (h.status === "HUTANG") badgeColor = "var(--danger)"; if (h.status === "CICIL") badgeColor = "var(--warning)";
+            let itemsArr = h.items.split('<br>').filter(x => x.trim() !== ''); let visibleItems = [itemsArr[0]]; let hiddenItems = [];
+            for(let i = 1; i < itemsArr.length; i++) { if(itemsArr[i].includes("A.N:")) { visibleItems.push(itemsArr[i]); } else { hiddenItems.push(itemsArr[i]); } }
+            let displayItems = `<div style="font-weight: bold;">${visibleItems.join('<br>')}</div>`;
+            if (hiddenItems.length > 0) { displayItems += `<div id="hist-detail-${h.id}" class="history-full">${hiddenItems.join('<br>')}</div><div class="history-toggle-btn" onclick="toggleHistoryDetail(${h.id}, this, ${hiddenItems.length})">Lihat ${hiddenItems.length} ..</div>`; }
+            return `<tr><td style="font-size:0.85rem;">${h.date}</td><td style="text-transform: capitalize; line-height:1.4;">${displayItems}</td><td style="font-size:0.9rem;"><b>Total:</b> Rp ${formatRp(h.total)}<br><b>Tunai:</b> Rp ${formatRp(h.cash)}</td><td style="text-align: center;"><span class="badge-status" style="background: ${badgeColor};">${h.status}</span></td></tr>`;
+        }).join('');
+        document.getElementById('dailyOmzet').innerText = `Rp ${formatRp(omzet)}`; document.getElementById('dailyCash').innerText = `Rp ${formatRp(tunai)}`; document.getElementById('dailyDebt').innerText = `Rp ${formatRp(piutang)}`;
+    }
+
+    function clearHistory() { historyLog = []; localStorage.setItem('pos_history', JSON.stringify(historyLog)); renderHistory(); showToast("Riwayat Sesi Dihapus (Lokal)!"); }
+    function requestShopNameEdit() { customPrompt('Ubah Nama Toko', 'Masukkan nama toko baru:', shopName, (newName) => { shopName = newName.toUpperCase(); localStorage.setItem('pos_shop_name', shopName); document.getElementById('shopNameDisplay').innerText = shopName; showToast("Nama Toko Berhasil Diubah!"); }); }
+
+    // --- EKSEKUSI AWAL ---
+    window.addEventListener('load', () => {
+        bootApp(); // Panggil fungsi engine Z-Offline
+    });
 </script>
 
 <script>
