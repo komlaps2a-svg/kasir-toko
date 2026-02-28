@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kasir-daeng-v4.02';
+const CACHE_NAME = 'kasir-daeng-v4.03';
 const urlsToCache = [
   './',
   './index.html',
