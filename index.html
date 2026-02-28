@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Kasir Daeng - V4.02 (Thermal Print Ready)</title>
+    <title>Sistem Kasir Daeng - V4.03 (Thermal Print Ready)</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
@@ -20,15 +20,19 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-                /* FIX SCROLL: Anti Geser Kiri-Kanan, Bebas Scroll Atas-Bawah */
-        html { overflow-x: hidden; }
-        body { 
-            background-color: var(--bg); color: var(--text); 
-            padding: 15px; max-width: 600px; margin: 0 auto; 
-            overflow-x: hidden !important; 
-            overflow-y: auto !important; /* Ini kunci biar bisa scroll lagi */
+                        /* PENGATURAN LAYAR UTAMA (100% BEBAS SCROLL BAWAAN HP) */
+        html {
+            width: 100%;
+        }
+        body {
+            background-color: var(--bg); 
+            color: var(--text); 
+            padding: 15px; 
+            max-width: 600px; 
+            margin: 0 auto; 
             min-height: 100vh;
-            display: block; 
+            overflow-x: hidden; /* Gembok geser kiri-kanan (anti serong) */
+            overflow-y: visible; /* Buka gembok atas-bawah biar HP yang handle scroll-nya */
             position: relative;
         }
         
@@ -686,7 +690,7 @@
     // BAGIAN 4: ENGINE Z-OFFLINE, LOGIKA & THERMAL SYNC
     // ==========================================
 
-    const APP_VERSION = "4.02"; 
+    const APP_VERSION = "4.03"; 
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
