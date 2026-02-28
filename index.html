@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Kasir Daeng - V4.03 (Thermal Print Ready)</title>
+    <title>Sistem Kasir Daeng - V4.04 (Thermal & Pro UI)</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
@@ -20,20 +20,12 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-                        /* PENGATURAN LAYAR UTAMA (100% BEBAS SCROLL BAWAAN HP) */
-        html {
-            width: 100%;
-        }
-        body {
-            background-color: var(--bg); 
-            color: var(--text); 
-            padding: 15px; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            min-height: 100vh;
-            overflow-x: hidden; /* Gembok geser kiri-kanan (anti serong) */
-            overflow-y: visible; /* Buka gembok atas-bawah biar HP yang handle scroll-nya */
-            position: relative;
+        /* PENGATURAN LAYAR UTAMA (100% BEBAS SCROLL BAWAAN HP & ANTI SERONG) */
+        html { width: 100%; overflow-x: hidden; }
+        body { 
+            background-color: var(--bg); color: var(--text); 
+            padding: 15px; max-width: 600px; margin: 0 auto; 
+            min-height: 100vh; overflow-x: hidden; overflow-y: visible; position: relative; 
         }
         
         /* Container Pembungkus Panel Biar Kaku & Center */
@@ -219,6 +211,9 @@
         .history-full.active { display: block; }
         .history-toggle-btn { display: inline-block; background: #e8f4fd; color: #2980b9; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; cursor: pointer; margin-top: 8px; border: 1px dashed #3498db; user-select: none;}
         .history-toggle-btn:active { background: #3498db; color: white; }
+
+        /* FIX: Paksa Pop-up Konfirmasi & Alert Selalu di Posisi Paling Depan */
+        #customAlert, #customConfirm, #customPrompt { z-index: 10005 !important; }
     </style>
 </head>
 <body>
@@ -687,10 +682,10 @@
     </div>
 <script>
     // ==========================================
-    // BAGIAN 4: ENGINE Z-OFFLINE, LOGIKA & THERMAL SYNC
+    // BAGIAN 4: ENGINE Z-OFFLINE, LOGIKA & THERMAL
     // ==========================================
 
-    const APP_VERSION = "4.03"; 
+    const APP_VERSION = "4.04"; 
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -706,7 +701,6 @@
     let units = JSON.parse(localStorage.getItem('pos_units')) || ['Kg', 'Ons', 'Liter', 'Pcs', 'Bks', 'Satuan'];
     let inventory = []; let debts = []; let historyLog = []; let cart = []; let manualItemCounter = 1;
 
-    // Fungsi Load Database
     function loadDB() {
         if (APP_MODE === 'CLOUD' && currentUser) {
             inventory = JSON.parse(localStorage.getItem(`pos_inv_${currentUser.id}`)) || [];
@@ -724,7 +718,6 @@
         }
     }
 
-    // Fungsi Save Database
     function saveDB() {
         if (APP_MODE === 'CLOUD' && currentUser) {
             localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
@@ -764,6 +757,7 @@
             if(netStatus) { netStatus.innerText = "Z-Offline (Lokal)"; netStatus.className = "status-sync sync-offline"; }
             return;
         }
+
         if (!sbClient) { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
 
         if (APP_MODE === 'CLOUD' && navigator.onLine) {
@@ -785,7 +779,9 @@
                         document.getElementById('viewProfileImg').src = currentUser.user_metadata.avatar_url;
                     }
                     if (pendingSync.length > 0) processPendingSync();
-                } else { forceLogoutToGuest(); }
+                } else { 
+                    APP_MODE = 'GUEST'; localStorage.setItem('pos_app_mode', 'GUEST');
+                }
             } catch(err) {
                 if(netStatus) { netStatus.innerText = "Server Lambat (Mode Lokal)"; netStatus.className = "status-sync sync-offline"; }
             }
@@ -794,13 +790,16 @@
         if (!window.supabaseListenerAdded) {
             window.supabaseListenerAdded = true;
             sbClient.auth.onAuthStateChange(async (event, currentSession) => {
-                if (event === 'SIGNED_OUT') { forceLogoutToGuest(); } 
+                // FIX LOOPING: Hanya tangkap state, jangan panggil fungsi Logout di sini
+                if (event === 'SIGNED_OUT') { 
+                    APP_MODE = 'GUEST'; localStorage.setItem('pos_app_mode', 'GUEST'); 
+                } 
                 else if (event === 'SIGNED_IN' && currentSession) {
                     currentUser = currentSession.user; APP_MODE = 'CLOUD'; localStorage.setItem('pos_app_mode', 'CLOUD');
                     if(netStatus) { netStatus.innerText = navigator.onLine ? "Online Mode (Cloud)" : "Offline Mode (Cloud)"; netStatus.className = navigator.onLine ? "status-sync sync-online" : "status-sync sync-offline"; }
                     document.getElementById('userNameDisplay').innerText = currentUser.user_metadata.full_name || "Kasir Cloud";
                     
-                    await handleLoginMigration(currentUser); closeModal('profileViewModal');
+                    await handleLoginMigration(currentUser); closeModal('loginModal'); closeModal('profileViewModal');
                     if (navigator.onLine && pendingSync.length > 0) processPendingSync();
                 }
             });
@@ -822,18 +821,17 @@
         loadDB(); renderAllUI();
     }
 
+    // FIX AUTO-REFRESH & ANTI FREEZE LOGOUT
     async function forceLogoutToGuest() {
-        APP_MODE = 'GUEST'; currentUser = null; localStorage.setItem('pos_app_mode', 'GUEST');
-        if (sbClient) await sbClient.auth.signOut();
+        closeModal('customConfirm'); closeModal('profileViewModal');
+        showToast("Memproses Logout...", "syncing");
         
+        APP_MODE = 'GUEST'; currentUser = null; localStorage.setItem('pos_app_mode', 'GUEST');
         localStorage.removeItem('pos_guest_inv'); localStorage.removeItem('pos_guest_debt'); localStorage.removeItem('pos_guest_hist');
         
-        document.getElementById('userNameDisplay').innerText = "Kasir Lokal";
-        const netStatus = document.getElementById('networkStatus');
-        if(netStatus) { netStatus.innerText = "Offline Mode (Guest)"; netStatus.className = "status-sync sync-offline"; }
+        if (sbClient) { try { await sbClient.auth.signOut(); } catch (err) { console.log(err); } }
         
-        loadDB(); renderAllUI(); closeModal('profileViewModal');
-        showToast("Logout Berhasil. Guest kembali ke 0.", "success");
+        setTimeout(() => { window.location.reload(); }, 800);
     }
 
     // --- PROFIL PRO & UPLOADER STORAGE ---
@@ -853,7 +851,7 @@
             document.getElementById('textGoogleLink').innerText = "Login Cloud";
             document.getElementById('btnGoogleLink').style.background = "var(--accent)";
         }
-        let omzet = 0, piutang = 0; historyLog.forEach(h => { if(h.status !== 'CICIL') omzet += h.total; }); debts.forEach(d => piutang += d.amount);
+        let omzet = 0, piutang = 0; historyLog.forEach(h => { if(!h.isDebtPayment && h.status !== 'CICIL') omzet += h.total; }); debts.forEach(d => piutang += d.amount);
         document.getElementById('viewTotalOmzet').innerText = `Rp ${formatRp(omzet)}`; document.getElementById('viewTotalPiutang').innerText = `Rp ${formatRp(piutang)}`;
         document.getElementById('profileViewModal').classList.add('active');
     }
@@ -903,6 +901,21 @@
         reader.readAsDataURL(f);
     });
 
+    // --- DETEKSI JARINGAN REALTIME ---
+    window.addEventListener('online', () => { 
+        const netStatus = document.getElementById('networkStatus');
+        if(APP_MODE === 'CLOUD') {
+            if(netStatus) { netStatus.innerText = "Menyambungkan..."; netStatus.className = "status-sync sync-pending"; }
+            if (currentUser && currentUser.id === 'offline_user') { initSupabaseBackground(); } 
+            else { if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; } }
+        }
+    });
+    window.addEventListener('offline', () => { 
+        const netStatus = document.getElementById('networkStatus');
+        if(netStatus) { netStatus.innerText = APP_MODE === 'CLOUD' ? "Offline Mode (Cloud)" : "Offline Mode (Guest)"; netStatus.className = "status-sync sync-offline"; }
+        showToast("Sinyal Terputus! Mode Offline Aktif.", "error");
+    });
+
     // --- UTILITIES & FORMATTER ---
     const formatRp = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(n);
     const parseRp = (s) => parseFloat(s.toString().replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
@@ -942,6 +955,7 @@
         const q = document.getElementById('searchInventoryInput').value.toLowerCase(); const list = inventory.filter(x => x.name.toLowerCase().includes(q));
         document.getElementById('inventoryList').innerHTML = list.map(i => {
             let eceranBadge = (i.eceranNominal && i.eceranQty) ? `<br><span style="color:var(--warning); font-size:0.75rem; font-weight:800;">(Patokan: Rp${formatRp(i.eceranNominal)} = ${i.eceranQty}${i.unit})</span>` : '';
+            // FIX TOMBOL TABEL: Pakai SVG dan Flexbox
             return `<tr>
                 <td><b style="font-size:1.1rem; text-transform: capitalize;">${i.name}</b>${eceranBadge}</td>
                 <td style="font-weight:700;">Rp ${formatRp(i.price)}</td>
@@ -1085,7 +1099,6 @@
         const tx = historyLog.find(x => x.id === id); if (!tx) return;
         let itemsHtml = '';
         
-        // Cek kalau ini transaksi biasa
         if(tx.cartSnapshot && tx.cartSnapshot.length > 0) {
             itemsHtml = tx.cartSnapshot.map(item => `
                 <tr>
@@ -1093,17 +1106,13 @@
                     <td style="text-align:right;">${formatRp(item.subtotal)}</td>
                 </tr>
             `).join('');
-        } 
-        // Cek kalau ini pembayaran piutang (tidak ada cartSnapshot)
-        else if (tx.isDebtPayment) {
+        } else if (tx.isDebtPayment) {
             itemsHtml = `<tr><td style="text-align:left;">Pembayaran Piutang<br><small>A.N: ${tx.borrower}</small></td><td style="text-align:right;">${formatRp(tx.cash)}</td></tr>`;
-        } 
-        else {
+        } else {
             itemsHtml = `<tr><td colspan="2" style="text-align:left;">${tx.items.replace(/<br>/g, '<br>')}</td></tr>`;
         }
 
-        let changeOrDebt = tx.cash - tx.total;
-        let changeLabel = changeOrDebt >= 0 ? 'Kembali' : 'Kurang/Hutang';
+        let changeOrDebt = tx.cash - tx.total; let changeLabel = changeOrDebt >= 0 ? 'Kembali' : 'Kurang/Hutang';
         let borrowerHtml = tx.borrower ? `<div class="receipt-row"><span>Pelanggan:</span><span>${tx.borrower}</span></div>` : '';
 
         const html = `
@@ -1160,7 +1169,6 @@
             let displayItems = `<div style="font-weight: bold;">${visibleItems.join('<br>')}</div>`;
             if (hiddenItems.length > 0) { displayItems += `<div id="hist-detail-${h.id}" class="history-full">${hiddenItems.join('<br>')}</div><div class="history-toggle-btn" onclick="toggleHistoryDetail(${h.id}, this, ${hiddenItems.length})">Lihat ${hiddenItems.length} ..</div>`; }
             
-            // Kolom baru untuk tombol Cetak & Badge
             return `<tr>
                 <td style="font-size:0.85rem;">${h.date}</td>
                 <td style="text-transform: capitalize; line-height:1.4;">${displayItems}</td>
@@ -1168,7 +1176,7 @@
                 <td style="text-align: center; vertical-align: middle;">
                     <div style="display:flex; flex-direction:column; gap:6px; align-items:center;">
                         <span class="badge-status" style="background: ${badgeColor}; padding: 4px 0; width: 100%; border-radius: 4px;">${h.status}</span>
-                        <button class="btn-primary" style="padding: 6px; font-size: 0.8rem; width: 100%;" onclick="printReceipt(${h.id})">
+                        <button class="btn-primary btn-table" style="width: 100%; border-radius:4px; height:32px;" onclick="printReceipt(${h.id})">
                             <svg class="icon-svg" style="margin-right:0; width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                         </button>
                     </div>
