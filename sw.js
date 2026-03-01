@@ -1,46 +1,58 @@
-const CACHE_NAME = 'kasir-daeng-v4.06';
+const CACHE_NAME = 'kasir-daeng-v4.10'; // Ganti angkanya misal jadi v4.11 kalau lu ada update codingan besar di Github
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icon-192.png'
 ];
 
-// Install Service Worker dan simpan file ke Cache
+// Tahap Install: Simpan semua file penting ke Cache HP
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Memaksa Service Worker baru buat langsung aktif (nggak nunggu browser ditutup)
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Opened cache');
+        console.log('Cache berhasil dibuka');
         return cache.addAll(urlsToCache);
       })
   );
 });
 
-// Gunakan Cache saat offline
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return file dari cache jika ada, jika tidak fetch dari internet
-        return response || fetch(event.request);
-      })
-  );
-});
-
-// Bersihkan Cache lama jika ada update versi
+// Tahap Activate: Bersihkan sisa-sisa Cache versi lama biar memori HP nggak penuh
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Menghapus cache lama:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Langsung ambil alih halaman yang lagi kebuka
+  );
+});
+
+// Tahap Fetch (Strategi: Network First, Fallback to Cache)
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        // Kalau online dan sukses dapat data terbaru dari server, simpan ke cache
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME)
+          .then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+        return response;
+      })
+      .catch(() => {
+        // Kalau gagal fetch (berarti lagi OFFLINE/Sinyal jelek), ambil dari Cache
+        return caches.match(event.request);
+      })
   );
 });
