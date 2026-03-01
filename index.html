@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Sistem Kasir Daeng - V4.10 (Bulletproof Cloud-Sync)</title>
+    <title>Sistem Kasir Daeng - Waktu & Filter Pintar</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
@@ -162,7 +162,6 @@
         .dash-box { padding: 12px 6px; border-radius: 10px; text-align: center; color: white; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
         .dash-box span { font-size: 0.7rem; opacity: 0.9; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
         .dash-box strong { font-size: clamp(0.9rem, 3.5vw, 1.1rem); font-weight: 900; word-break: break-word; }
-
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.2s; padding: 15px; overflow-y: auto; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
@@ -377,8 +376,20 @@
             <button class="btn-thumb" onclick="closeModal('loginModal')" style="background: var(--bg); color: #555;">Nanti Saja (Guest)</button>
         </div>
     </div>
+    <div id="filterTimeModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">Pilih Waktu Riwayat</div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <button class="btn-thumb" style="background: var(--bg); border: 2px solid var(--border); color: var(--primary); text-align: left; padding: 15px; font-weight: 900; justify-content: flex-start;" onclick="selectHistoryFilter('today', 'Hari Ini')">Hari Ini</button>
+                <button class="btn-thumb" style="background: var(--bg); border: 2px solid var(--border); color: var(--primary); text-align: left; padding: 15px; font-weight: 900; justify-content: flex-start;" onclick="selectHistoryFilter('3days', '3 Hari Terakhir')">3 Hari Terakhir</button>
+                <button class="btn-thumb" style="background: var(--bg); border: 2px solid var(--border); color: var(--primary); text-align: left; padding: 15px; font-weight: 900; justify-content: flex-start;" onclick="selectHistoryFilter('7days', '7 Hari Terakhir')">7 Hari Terakhir</button>
+                <button class="btn-thumb" style="background: var(--bg); border: 2px solid var(--border); color: var(--primary); text-align: left; padding: 15px; font-weight: 900; justify-content: flex-start;" onclick="selectHistoryFilter('all', 'Semua Riwayat')">Semua Riwayat</button>
+            </div>
+            <button class="btn-thumb" style="background: var(--danger); color: white; width: 100%;" onclick="closeModal('filterTimeModal')">TUTUP</button>
+        </div>
+    </div>
     <div class="main-container">
-                <div class="panel">
+        <div class="panel">
             <div class="user-profile" onclick="openProfileView()">
                 <div class="prof-compact-left">
                     <img src="icon-192.png" id="headProfileImg" class="prof-compact-pic">
@@ -387,7 +398,7 @@
                         <span id="userNameDisplay" style="font-size: clamp(0.9rem, 3.5vw, 1.1rem); font-weight: 900; color: var(--primary);">Kasir Lokal</span>
                     </div>
                 </div>
-                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
                     <span id="networkStatus" class="status-sync sync-offline">Menyiapkan...</span>
                     <span onclick="event.stopPropagation(); toggleMute();" style="cursor: pointer; background: var(--surface); border: 1px solid var(--accent); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none; display: flex; align-items: center; gap: 4px;">
                         Suara: <span id="muteBtnIcon" style="display: flex; align-items: center;"></span>
@@ -432,7 +443,6 @@
                         </div>
                         <div style="display: flex; gap: clamp(6px, 2vw, 10px); margin-bottom: 15px;">
                             <input type="text" id="itemPrice" inputmode="numeric" placeholder="Harga / Satuan (Rp)" style="flex: 2;" oninput="formatRupiahUI(this)">
-                            
                             <div id="itemUnitDisplay" class="custom-select" style="flex: 1;" onclick="openUnitSelectModal()">
                                 <span id="itemUnitText">KG</span>
                                 <span>▼</span>
@@ -475,6 +485,11 @@
                 </div>
             </div>
         </div>
+
+        <div class="panel">
+            <h2 style="color: var(--success); border-bottom: 3px solid var(--success);">
+                <div class="title-wrap">
+                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>MEJA KASIR UTAMA</span>
                 </div>
             </h2>
@@ -639,9 +654,19 @@
             <div class="panel-wrapper" id="historyContent">
                 <div class="panel-content">
                     <div class="panel-inner">
+                        
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #e8f4fd; padding: 10px; border-radius: 8px; border: 1px dashed var(--accent);">
+                            <span style="font-size: 0.85rem; font-weight: 900; color: var(--primary);">Pilih Waktu:</span>
+                            <div class="custom-select" style="width: auto; padding: 8px 15px; font-size: 0.85rem; background: #fff; border-color: var(--accent); min-width: 140px; justify-content: space-between; border-width: 2px;" onclick="document.getElementById('filterTimeModal').classList.add('active'); playTick();">
+                                <span id="historyFilterText">Hari Ini</span>
+                                <span style="margin-left: 10px;">▼</span>
+                            </div>
+                            <input type="hidden" id="historyFilterVal" value="today">
+                        </div>
+
                         <div class="dash-grid">
                             <div class="dash-box" style="background: var(--primary);">
-                                <span>OMZET SESI INI</span>
+                                <span>OMZET TERCATAT</span>
                                 <strong id="dailyOmzet">Rp 0</strong>
                             </div>
                             <div class="dash-box" style="background: var(--success);">
@@ -655,9 +680,9 @@
                         </div>
 
                         <div style="margin-bottom: 20px;">
-                            <button class="btn-danger" style="padding: clamp(12px, 4vw, 18px); font-size: clamp(1rem, 3.5vw, 1.1rem);" onclick="customConfirm('Hapus Riwayat?', 'Seluruh riwayat transaksi di sesi ini akan dihapus permanen. Lanjutkan?', clearHistory)">
+                            <button class="btn-danger" style="padding: clamp(12px, 4vw, 18px); font-size: clamp(1rem, 3.5vw, 1.1rem);" onclick="confirmClearHistory()">
                                 <svg style="width: 18px; height: 18px; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path></svg>
-                                HAPUS RIWAYAT SESI
+                                HAPUS DATA (<span id="deleteBtnLabel">HARI INI</span>)
                             </button>
                         </div>
 
@@ -678,13 +703,14 @@
                 </div>
             </div>
         </div>
+
     </div>
 <script>
     // ==========================================
-    // BAGIAN 4A: ENGINE Z-OFFLINE BULLETPROOF V7.1
+    // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.10 CLOUD-SYNC"; 
+    const APP_VERSION = "4.11 CLOUD-SYNC"; 
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -693,14 +719,81 @@
     let sbClient = null;
     let currentUser = null;
     let APP_MODE = localStorage.getItem('pos_app_mode') || 'GUEST';
-    let realtimeChannel = null; // Tambahan buat dengerin update otomatis
+    let realtimeChannel = null;
 
     // --- DATABASE MEMORI ---
     let shopName = localStorage.getItem('pos_shop_name') || 'TOKO DAENG';
     let units = JSON.parse(localStorage.getItem('pos_units')) || ['Kg', 'Ons', 'Liter', 'Pcs', 'Bks', 'Satuan'];
     let inventory = []; let debts = []; let historyLog = []; let cart = []; let manualItemCounter = 1;
 
-    // --- FUNGSI LOAD LOKAL (0 Detik Loading) ---
+    // --- HELPER AUDIO & HAPTIC (FEEL PREMIUM) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    let isAppMuted = localStorage.getItem('pos_muted') === 'true';
+
+    const svgVolumeOn = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+    const svgVolumeOff = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+
+    function toggleMute() {
+        isAppMuted = !isAppMuted;
+        localStorage.setItem('pos_muted', isAppMuted);
+        showToast(isAppMuted ? "Mode Senyap Aktif" : "Suara Aktif", "update");
+        updateMuteUI();
+    }
+
+    function updateMuteUI() {
+        const btn = document.getElementById('muteBtnIcon');
+        if(btn) btn.innerHTML = isAppMuted ? svgVolumeOff : svgVolumeOn;
+    }
+
+    function initAudio() { 
+        if (isAppMuted) return; 
+        if (!audioCtx) { audioCtx = new AudioContext(); } 
+        if (audioCtx.state === 'suspended') audioCtx.resume(); 
+    }
+
+    function playTick() {
+        if (isAppMuted) return; 
+        if (navigator.vibrate) navigator.vibrate(25); 
+        initAudio();
+        try {
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.type = 'sine';
+            osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        } catch(e) {}
+    }
+
+    function playCekring() {
+        if (isAppMuted) return; 
+        if (navigator.vibrate) navigator.vibrate([40, 80, 50]); 
+        initAudio();
+        try {
+            setTimeout(() => {
+                const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+                osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.type = 'sine'; 
+                osc1.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc1.start(); osc1.stop(audioCtx.currentTime + 0.08);
+            }, 0);
+            setTimeout(() => {
+                const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+                osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(2900, audioCtx.currentTime);
+                gain2.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc2.start(); osc2.stop(audioCtx.currentTime + 0.5);
+            }, 120);
+        } catch(e) {}
+    }
+
+    document.body.addEventListener('click', initAudio, { once: true });
+
+    // --- FUNGSI LOAD & SAVE LOKAL ---
     function loadDB() {
         if (APP_MODE === 'CLOUD' && currentUser) {
             inventory = JSON.parse(localStorage.getItem(`pos_inv_${currentUser.id}`)) || [];
@@ -718,13 +811,11 @@
         }
     }
 
-    // --- FUNGSI SAVE LOKAL + SINKRONISASI PINTAR ---
     function saveDB() {
         if (APP_MODE === 'CLOUD' && currentUser) {
             localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
             localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
             localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
-            
             localStorage.setItem(`pos_pending_${currentUser.id}`, "true");
             pushToCloud();
         } else {
@@ -734,26 +825,14 @@
         }
     }
 
-    // --- SISTEM KURIR & REALTIME SYNC (ANTI GANGGU AKTIFITAS) ---
+    // --- CLOUD SYNC & REALTIME ---
     async function pushToCloud() {
         if (APP_MODE !== 'CLOUD' || !currentUser) return;
         const netStatus = document.getElementById('networkStatus');
-
-        if (!navigator.onLine) {
-            if(netStatus) { netStatus.innerText = "Tersimpan Lokal (Tunggu Sinyal)"; netStatus.className = "status-sync sync-pending"; }
-            return;
-        }
-
+        if (!navigator.onLine) { if(netStatus) { netStatus.innerText = "Tersimpan Lokal (Tunggu Sinyal)"; netStatus.className = "status-sync sync-pending"; } return; }
         if(netStatus) { netStatus.innerText = "Menyinkronkan..."; netStatus.className = "status-sync sync-pending"; }
 
-        const payload = {
-            user_id: currentUser.id,
-            inventory: inventory,
-            debts: debts,
-            history: historyLog,
-            updated_at: new Date().toISOString()
-        };
-
+        const payload = { user_id: currentUser.id, inventory: inventory, debts: debts, history: historyLog, updated_at: new Date().toISOString() };
         const { error } = await sbClient.from('kasir_data').upsert(payload);
         
         if (!error) {
@@ -766,61 +845,47 @@
 
     async function fetchCloudData() {
         if (!navigator.onLine || APP_MODE !== 'CLOUD' || !currentUser) return;
-        
         let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
-        if (isPending === "true") {
-            pushToCloud();
-            return; 
-        }
+        if (isPending === "true") { pushToCloud(); return; }
 
         const netStatus = document.getElementById('networkStatus');
         if(netStatus) { netStatus.innerText = "Mengecek Cloud..."; }
 
         const { data, error } = await sbClient.from('kasir_data').select('*').eq('user_id', currentUser.id).single();
-        
         if (data) {
             inventory = data.inventory || []; debts = data.debts || []; historyLog = data.history || [];
             localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
             localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
             localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
-            renderAllUI(); // Render awal saat pertama narik
+            renderAllUI(); 
         }
         if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
     }
 
-    // LISTENER BACKGROUND: Update UI diam-diam kalau ada perubahan di database
     function setupRealtimeSync() {
         if (!sbClient || !currentUser) return;
         if (realtimeChannel) { sbClient.removeChannel(realtimeChannel); }
-        
         realtimeChannel = sbClient.channel('custom-all-channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'kasir_data', filter: `user_id=eq.${currentUser.id}` }, (payload) => {
                 let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
-                // Hanya update jika tidak ada data lokal yang nunggu dikirim
                 if (isPending !== "true" && payload.new) {
                     inventory = payload.new.inventory || []; debts = payload.new.debts || []; historyLog = payload.new.history || [];
-                    
                     localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
                     localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
                     localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
-                    
-                    // Render ulang HANYA tabel, jangan sentuh cart kasir!
                     renderInventory(); renderDebts(); renderHistory();
                     showToast("Database disinkronkan otomatis!", "update");
                 }
-            })
-            .subscribe();
+            }).subscribe();
     }
 
-    // --- BOOTING SUPER AMAN (ANTI LOGOUT SENDIRI) ---
-        function bootApp() {
-        updateMuteUI(); // <--- CUMA NAMBAHIN BARIS INI DOANG DI BAWAH KURUNG KURAWAL
-        
+    // --- BOOTING SUPER AMAN ---
+    function bootApp() {
+        updateMuteUI();
         document.getElementById('shopNameDisplay').innerText = shopName;
         if(units.length > 0) { document.getElementById('itemUnitVal').value = units[0]; document.getElementById('itemUnitText').innerText = units[0]; }
         
         const netStatus = document.getElementById('networkStatus');
-        
         if (APP_MODE === 'CLOUD') {
             const savedUser = JSON.parse(localStorage.getItem('sb-ytzkgfigcvdkdyxwsdbn-auth-token'));
             if(savedUser && savedUser.user) {
@@ -850,9 +915,7 @@
 
         if (APP_MODE === 'CLOUD') {
             try {
-                // Jangan pakai Promise.race yang langsung mecat user. Cukup cek aja santai.
                 const { data: { session }, error } = await sbClient.auth.getSession();
-                
                 if (error) throw error;
                 if (session && session.user) {
                     currentUser = session.user;
@@ -862,19 +925,12 @@
                         document.getElementById('headProfileImg').src = currentUser.user_metadata.avatar_url;
                         document.getElementById('viewProfileImg').src = currentUser.user_metadata.avatar_url;
                     }
-                    if(navigator.onLine) {
-                        await fetchCloudData();
-                        setupRealtimeSync(); // Aktifin mata-mata cloud
-                    } else {
-                        if(netStatus) { netStatus.innerText = "Offline (Aman di Lokal)"; netStatus.className = "status-sync sync-offline"; }
-                    }
+                    if(navigator.onLine) { await fetchCloudData(); setupRealtimeSync(); } 
+                    else { if(netStatus) { netStatus.innerText = "Offline (Aman di Lokal)"; netStatus.className = "status-sync sync-offline"; } }
                 } else { 
-                    // Kalau beneran ga ada session di cloud
                     APP_MODE = 'GUEST'; localStorage.setItem('pos_app_mode', 'GUEST'); loadDB(); renderAllUI();
                 }
             } catch(err) {
-                // FIX: Kalau timeout/jaringan jelek, JANGAN DI LOGOUT. Tetap di mode CLOUD tapi kasih status offline.
-                console.log("Koneksi Supabase terputus, stay di mode lokal.");
                 if(netStatus) { netStatus.innerText = "Offline (Aman di Lokal)"; netStatus.className = "status-sync sync-offline"; }
             }
         }
@@ -882,36 +938,26 @@
         if (!window.supabaseListenerAdded) {
             window.supabaseListenerAdded = true;
             sbClient.auth.onAuthStateChange(async (event, currentSession) => {
-                // Pastikan event SIGNED_OUT bukan dari error koneksi
-                if (event === 'SIGNED_OUT') { 
-                    APP_MODE = 'GUEST'; localStorage.setItem('pos_app_mode', 'GUEST'); 
-                } 
+                if (event === 'SIGNED_OUT') { APP_MODE = 'GUEST'; localStorage.setItem('pos_app_mode', 'GUEST'); } 
                 else if (event === 'SIGNED_IN' && currentSession) {
                     currentUser = currentSession.user; APP_MODE = 'CLOUD'; localStorage.setItem('pos_app_mode', 'CLOUD');
                     if(netStatus) { netStatus.innerText = navigator.onLine ? "Online Mode (Cloud)" : "Offline Mode (Cloud)"; netStatus.className = navigator.onLine ? "status-sync sync-online" : "status-sync sync-offline"; }
                     document.getElementById('userNameDisplay').innerText = currentUser.user_metadata.full_name || "Kasir Cloud";
-                    
-                    await handleLoginMigration(currentUser); 
-                    setupRealtimeSync();
+                    await handleLoginMigration(currentUser); setupRealtimeSync();
                     closeModal('loginModal'); closeModal('profileViewModal');
                 }
             });
         }
     }
 
-    // MIGRASI GUEST KE CLOUD
     async function handleLoginMigration(user) {
         showToast("Memeriksa Cloud...", "syncing");
         let guestInv = JSON.parse(localStorage.getItem('pos_guest_inv')) || [];
-        
         const { data, error } = await sbClient.from('kasir_data').select('*').eq('user_id', user.id).single();
 
         if (!data && guestInv.length > 0) {
-            inventory = guestInv;
-            debts = JSON.parse(localStorage.getItem('pos_guest_debt')) || [];
-            historyLog = JSON.parse(localStorage.getItem('pos_guest_hist')) || [];
-            saveDB(); 
-            showToast("Data Guest diangkat ke Cloud!", "success");
+            inventory = guestInv; debts = JSON.parse(localStorage.getItem('pos_guest_debt')) || []; historyLog = JSON.parse(localStorage.getItem('pos_guest_hist')) || [];
+            saveDB(); showToast("Data Guest diangkat ke Cloud!", "success");
         } else if (data) {
             inventory = data.inventory || []; debts = data.debts || []; historyLog = data.history || [];
             localStorage.setItem(`pos_inv_${user.id}`, JSON.stringify(inventory));
@@ -919,22 +965,18 @@
             localStorage.setItem(`pos_hist_${user.id}`, JSON.stringify(historyLog));
             showToast("Data ditarik dari Cloud...", "success");
         }
-        
         localStorage.removeItem('pos_guest_inv'); localStorage.removeItem('pos_guest_debt'); localStorage.removeItem('pos_guest_hist');
         renderAllUI();
     }
 
-    // LOGOUT BERSIH
     async function forceLogoutToGuest() {
-        closeModal('customConfirm'); closeModal('profileViewModal');
-        showToast("Memproses Logout...", "syncing");
+        closeModal('customConfirm'); closeModal('profileViewModal'); showToast("Memproses Logout...", "syncing");
         APP_MODE = 'GUEST'; currentUser = null; localStorage.setItem('pos_app_mode', 'GUEST');
         localStorage.removeItem('pos_guest_inv'); localStorage.removeItem('pos_guest_debt'); localStorage.removeItem('pos_guest_hist');
         if (realtimeChannel) { sbClient.removeChannel(realtimeChannel); realtimeChannel = null; }
         if (sbClient) { try { await sbClient.auth.signOut(); } catch (err) {} }
         setTimeout(() => { window.location.reload(); }, 800);
     }
-
     // LISTENER SINYAL OTOMATIS
     window.addEventListener('online', () => { 
         const netStatus = document.getElementById('networkStatus');
@@ -942,7 +984,7 @@
             if(netStatus) { netStatus.innerText = "Sinyal Balik! Menyinkronkan..."; netStatus.className = "status-sync sync-pending"; }
             let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
             if (isPending === "true") { pushToCloud(); } else { fetchCloudData(); }
-            setupRealtimeSync(); // Koneksi ulang socket realtime
+            setupRealtimeSync(); 
         }
     });
     window.addEventListener('offline', () => { 
@@ -1035,87 +1077,6 @@
     function customConfirm(title, message, actionCallback) { document.getElementById('confirmTitle').innerText = title; document.getElementById('confirmMsg').innerText = message; document.getElementById('customConfirm').classList.add('active'); const btnYes = document.getElementById('confirmBtnYes'); const newBtnYes = btnYes.cloneNode(true); btnYes.parentNode.replaceChild(newBtnYes, btnYes); newBtnYes.addEventListener('click', () => { closeModal('customConfirm'); if(actionCallback) actionCallback(); }); }
     function customPrompt(title, message, defaultVal, actionCallback) { document.getElementById('promptTitle').innerText = title; document.getElementById('promptMsg').innerText = message; const input = document.getElementById('promptInput'); input.value = defaultVal || ''; document.getElementById('customPrompt').classList.add('active'); setTimeout(() => input.focus(), 100); const btnSave = document.getElementById('promptBtnSave'); const newBtnSave = btnSave.cloneNode(true); btnSave.parentNode.replaceChild(newBtnSave, btnSave); newBtnSave.addEventListener('click', () => { let val = document.getElementById('promptInput').value.trim(); closeModal('customPrompt'); if(actionCallback && val) actionCallback(val); }); }
     function showToast(msg, type = 'success') { const box = document.getElementById('toastBox'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerText = msg; box.appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000); }
-        // --- HELPER AUDIO & HAPTIC (FEEL PREMIUM) ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
-    // Memori buat nginget status suara (Default: Suara Nyala)
-        let isAppMuted = localStorage.getItem('pos_muted') === 'true';
-
-    // Desain Icon SVG
-    const svgVolumeOn = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
-    const svgVolumeOff = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
-
-    function toggleMute() {
-        isAppMuted = !isAppMuted;
-        localStorage.setItem('pos_muted', isAppMuted);
-        showToast(isAppMuted ? "Mode Senyap Aktif" : "Suara Aktif", "update");
-        updateMuteUI();
-    }
-
-    function updateMuteUI() {
-        const btn = document.getElementById('muteBtnIcon');
-        // Inject SVG ke dalam tombol, bukan innerText lagi
-        if(btn) btn.innerHTML = isAppMuted ? svgVolumeOff : svgVolumeOn;
-    }
-
-    function initAudio() { 
-        if (isAppMuted) return; 
-        if (!audioCtx) { audioCtx = new AudioContext(); } 
-        if (audioCtx.state === 'suspended') audioCtx.resume(); 
-    }
-
-    // Suara "Tik" khas ketikan iPhone
-    function playTick() {
-        if (isAppMuted) return; 
-        if (navigator.vibrate) navigator.vibrate(10); 
-        initAudio();
-        try {
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
-            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
-        } catch(e) {}
-    }
-
-    // Suara "Cek-Ring" khas koin untuk transaksi selesai
-    function playCekring() {
-        if (isAppMuted) return; 
-        if (navigator.vibrate) navigator.vibrate([20, 50, 30]); 
-        initAudio();
-        
-        try {
-            // Bunyi "Cek"
-            setTimeout(() => {
-                const osc1 = audioCtx.createOscillator();
-                const gain1 = audioCtx.createGain();
-                osc1.connect(gain1); gain1.connect(audioCtx.destination);
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(1200, audioCtx.currentTime);
-                gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc1.start(); osc1.stop(audioCtx.currentTime + 0.1);
-            }, 0);
-
-            // Bunyi "Ring" (ada jeda sedikit biar realistis)
-            setTimeout(() => {
-                const osc2 = audioCtx.createOscillator();
-                const gain2 = audioCtx.createGain();
-                osc2.connect(gain2); gain2.connect(audioCtx.destination);
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(2000, audioCtx.currentTime);
-                gain2.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                osc2.start(); osc2.stop(audioCtx.currentTime + 0.4);
-            }, 80); 
-        } catch(e) {}
-    }
-
-    document.body.addEventListener('click', initAudio, { once: true });
 
     // --- MANAJEMEN SATUAN & BARANG ---
     function openUnitSelectModal() { document.getElementById('unitSelectContainer').innerHTML = units.map(u => `<div class="unit-option-btn" onclick="selectUnitOption('${u}')">${u}</div>`).join(''); document.getElementById('unitSelectModal').classList.add('active'); }
@@ -1162,11 +1123,11 @@
     function editItemPrice(id) { const item = inventory.find(x => x.id === id); if(!item) return; customPrompt('Edit Harga', `Harga baru untuk ${item.name}:`, formatRp(item.price), (newVal) => { const newPrice = parseRp(newVal); if(newPrice > 0) { item.price = newPrice; saveDB(); renderInventory(); showToast(`Harga ${item.name} diubah!`); } }); }
     document.getElementById('searchInventoryInput').addEventListener('input', renderInventory);
 
-    // --- PENCARIAN & SMART SCALE V4 ---
+    // --- PENCARIAN & SMART SCALE ---
     const searchInput = document.getElementById('searchInput'); const searchResults = document.getElementById('searchResults'); const nominalInput = document.getElementById('nominalInput');
     function setQuickQty(val) { document.getElementById('itemQty').value = val; playTick(); }
 
-        searchInput.addEventListener('input', function() {
+    searchInput.addEventListener('input', function() {
         const q = this.value.toLowerCase(); if (q.length < 1) { searchResults.style.display = 'none'; resetSelection(); return; }
         const list = inventory.filter(i => i.name.toLowerCase().includes(q));
         searchResults.innerHTML = list.map(i => { 
@@ -1278,10 +1239,9 @@
         historyLog.unshift(txData); 
         
         saveDB(); 
-        
         cart = []; manualItemCounter = 1; document.getElementById('cashInput').value = ''; document.getElementById('debtorName').value = ''; document.getElementById('changeDisplayBox').classList.remove('kurang'); document.getElementById('changeLabelText').innerText = "Status / Kembalian"; document.getElementById('changeDue').innerText = "Rp 0"; document.getElementById('debtSection').style.display = 'none';
         
-        playCekring(); // Bunyi khas koin masuk mesin
+        playCekring();
         renderCart(); renderDebts(); renderHistory(); document.getElementById('searchInput').focus(); showToast("Transaksi Berhasil Disimpan!");
     }
 
@@ -1298,7 +1258,7 @@
         document.getElementById('receiptArea').innerHTML = html; document.getElementById('receiptModal').classList.add('active');
     }
 
-    // --- PIUTANG & RIWAYAT ---
+    // --- PIUTANG ---
     function renderDebts() {
         const q = document.getElementById('searchDebtInput').value.toLowerCase(); const list = debts.filter(x => x.name.toLowerCase().includes(q));
         document.getElementById('debtList').innerHTML = list.map(d => `<tr><td style="font-size:clamp(0.75rem, 2.5vw, 0.85rem);">${d.date}</td><td style="text-transform: capitalize;"><b style="font-size:clamp(0.95rem, 3.5vw, 1.1rem);">${d.name}</b></td><td style="color:var(--danger); font-weight:900; font-size:clamp(0.95rem, 3.5vw, 1.1rem);">Rp ${formatRp(d.amount)}</td><td style="text-align:center;"><button class="btn-success" style="padding: clamp(8px, 2.5vw, 10px); width: 100%; font-size:clamp(0.75rem, 2.5vw, 0.85rem);" onclick="openDebtPaymentModal(${d.id})">BAYAR</button></td></tr>`).join('');
@@ -1320,10 +1280,50 @@
 
     function toggleHistoryDetail(id, btn, count) { const detailDiv = document.getElementById('hist-detail-' + id); if(detailDiv.classList.contains('active')) { detailDiv.classList.remove('active'); btn.innerText = `Lihat ${count} ..`; } else { detailDiv.classList.add('active'); btn.innerText = `Tutup Detail [-]`; } }
 
+
+        // ==========================================
+    // LOGIKA BARU: FILTER WAKTU & HAPUS PINTAR
+    // ==========================================
+    
+    function selectHistoryFilter(val, textLabel) {
+        document.getElementById('historyFilterVal').value = val;
+        document.getElementById('historyFilterText').innerText = textLabel;
+        closeModal('filterTimeModal');
+        playTick(); 
+        renderHistory();
+    }
+
+    function getFilteredHistory() {
+        const filterVal = document.getElementById('historyFilterVal').value;
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        const btnLabel = document.getElementById('deleteBtnLabel');
+        if(filterVal === 'today') btnLabel.innerText = "HARI INI";
+        else if(filterVal === '3days') btnLabel.innerText = "3 HARI";
+        else if(filterVal === '7days') btnLabel.innerText = "7 HARI";
+        else btnLabel.innerText = "SEMUA";
+
+        return historyLog.filter(h => {
+            if (filterVal === 'all') return true;
+            const txTime = h.id; 
+            if (filterVal === 'today') return txTime >= startOfToday;
+            if (filterVal === '3days') return txTime >= (startOfToday - (2 * 24 * 60 * 60 * 1000));
+            if (filterVal === '7days') return txTime >= (startOfToday - (6 * 24 * 60 * 60 * 1000)); 
+            return true;
+        });
+    }
+
     function renderHistory() {
+        const filteredLog = getFilteredHistory();
         let omzet = 0, tunai = 0, piutang = 0;
-        document.getElementById('historyList').innerHTML = historyLog.map(h => {
-            if(!h.isDebtPayment) { omzet += h.total; tunai += Math.min(h.total, h.cash); if (h.status === "HUTANG") piutang += (h.total - h.cash); }
+        
+        document.getElementById('historyList').innerHTML = filteredLog.map(h => {
+            if(!h.isDebtPayment) { 
+                omzet += h.total; 
+                tunai += Math.min(h.total, h.cash); 
+                if (h.status === "HUTANG") piutang += (h.total - h.cash); 
+            }
             let badgeColor = "var(--primary)"; if (h.status === "LUNAS") badgeColor = "var(--success)"; if (h.status === "HUTANG") badgeColor = "var(--danger)"; if (h.status === "CICIL") badgeColor = "var(--warning)";
             let itemsArr = h.items.split('<br>').filter(x => x.trim() !== ''); let visibleItems = [itemsArr[0]]; let hiddenItems = [];
             for(let i = 1; i < itemsArr.length; i++) { if(itemsArr[i].includes("A.N:")) { visibleItems.push(itemsArr[i]); } else { hiddenItems.push(itemsArr[i]); } }
@@ -1331,11 +1331,36 @@
             if (hiddenItems.length > 0) { displayItems += `<div id="hist-detail-${h.id}" class="history-full">${hiddenItems.join('<br>')}</div><div class="history-toggle-btn" onclick="toggleHistoryDetail(${h.id}, this, ${hiddenItems.length})">Lihat ${hiddenItems.length} ..</div>`; }
             return `<tr><td style="font-size:clamp(0.7rem, 2.5vw, 0.85rem);">${h.date}</td><td style="text-transform: capitalize; line-height:1.4; font-size:clamp(0.85rem, 3vw, 0.95rem);">${displayItems}</td><td style="font-size:clamp(0.8rem, 3vw, 0.9rem);"><b>Total:</b> Rp ${formatRp(h.total)}<br><b>Tunai:</b> Rp ${formatRp(h.cash)}</td><td style="text-align: center; vertical-align: middle;"><div style="display:flex; flex-direction:column; gap:6px; align-items:center;"><span class="badge-status" style="background: ${badgeColor}; padding: 4px 0; width: 100%; border-radius: 4px;">${h.status}</span><button class="btn-primary btn-table" style="width: 100%; border-radius:4px; height: clamp(28px, 8vw, 32px);" onclick="printReceipt(${h.id})"><svg class="icon-svg" style="margin-right:0; width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button></div></td></tr>`;
         }).join('');
-        document.getElementById('dailyOmzet').innerText = `Rp ${formatRp(omzet)}`; document.getElementById('dailyCash').innerText = `Rp ${formatRp(tunai)}`; document.getElementById('dailyDebt').innerText = `Rp ${formatRp(piutang)}`;
+        
+        document.getElementById('dailyOmzet').innerText = `Rp ${formatRp(omzet)}`; 
+        document.getElementById('dailyCash').innerText = `Rp ${formatRp(tunai)}`; 
+        document.getElementById('dailyDebt').innerText = `Rp ${formatRp(piutang)}`;
     }
 
-    function clearHistory() { historyLog = []; saveDB(); renderHistory(); showToast("Riwayat Sesi Dihapus!"); }
-    function requestShopNameEdit() { customPrompt('Ubah Nama Toko', 'Masukkan nama toko baru:', shopName, (newName) => { shopName = newName.toUpperCase(); localStorage.setItem('pos_shop_name', shopName); document.getElementById('shopNameDisplay').innerText = shopName; pushToCloud(); showToast("Nama Toko Berhasil Diubah!"); }); }
+    function confirmClearHistory() {
+        const filterVal = document.getElementById('historyFilterVal').value;
+        let msg = "";
+        if(filterVal === 'today') msg = "Yakin HAPUS PERMANEN riwayat transaksi HARI INI saja?";
+        else if(filterVal === '3days') msg = "Yakin HAPUS PERMANEN riwayat 3 HARI TERAKHIR?";
+        else if(filterVal === '7days') msg = "Yakin HAPUS PERMANEN riwayat 7 HARI TERAKHIR?";
+        else msg = "Yakin HAPUS SEMUA riwayat transaksi dari awal?";
+        customConfirm('Hapus Data Pintar', msg, clearHistory);
+    }
+
+    function clearHistory() {
+        const filterVal = document.getElementById('historyFilterVal').value;
+        if (filterVal === 'all') { historyLog = []; } 
+        else {
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            let cutoffTime = 0;
+            if (filterVal === 'today') cutoffTime = startOfToday;
+            else if (filterVal === '3days') cutoffTime = startOfToday - (2 * 24 * 60 * 60 * 1000);
+            else if (filterVal === '7days') cutoffTime = startOfToday - (6 * 24 * 60 * 60 * 1000);
+            historyLog = historyLog.filter(h => h.id < cutoffTime);
+        }
+        saveDB(); renderHistory(); showToast("Riwayat berhasil dibersihkan!"); 
+    }
 
     // RENDER SEMUA UI
     function renderAllUI() { renderUnits(); renderInventory(); renderDebts(); renderHistory(); }
@@ -1351,12 +1376,10 @@
             navigator.serviceWorker.register('./sw.js')
             .then(reg => {
                 console.log('Service Worker terdaftar!', reg.scope);
-                // Deteksi kalau ada update file dari server (GitHub)
                 reg.onupdatefound = () => {
                     const installingWorker = reg.installing;
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // Update tersedia, refresh tab tanpa buang sesi lokal
                             showToast("Update terbaru dipasang! Memuat ulang...", "update");
                             setTimeout(() => window.location.reload(), 1500);
                         }
@@ -1366,7 +1389,6 @@
             .catch(err => console.log('Service Worker Gagal!', err));
         });
         
-        // Handle pergantian cache
         let refreshing;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (refreshing) return;
