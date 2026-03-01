@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Kasir Daeng - V4.06 (Bulletproof Local-First)</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Sistem Kasir Daeng - V4.10 (Bulletproof Cloud-Sync)</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
@@ -94,14 +97,13 @@
         .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
         .profile-upload-btn { background: var(--primary); border: 1px solid var(--border); color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 
-        .status-sync { font-size: 10px; padding: 4px 8px; border-radius: 4px; display: inline-block; font-weight: 700; }
+        .status-sync { font-size: 10px; padding: 4px 8px; border-radius: 4px; display: inline-block; font-weight: 700; transition: all 0.3s ease; }
         .sync-online { background: rgba(46, 204, 113, 0.2); color: var(--success); }
         .sync-offline { background: rgba(243, 156, 18, 0.2); color: var(--warning); }
         .sync-pending { background: rgba(52, 152, 219, 0.2); color: var(--accent); }
 
         .unit-tag { background: var(--primary); color: white; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .unit-tag span { cursor: pointer; color: #ff7675; font-weight: 900; padding: 0 4px; }
-
         .eceran-box { background: #fff8e1; border: 2px dashed var(--warning); padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none; }
         .eceran-box.active { display: block; }
         .eceran-toggle-btn { background: transparent; border: 2px solid var(--warning); color: var(--warning); padding: 10px; font-size: 0.85rem; margin-bottom: 15px; }
@@ -131,18 +133,11 @@
         .change-value { font-size: clamp(1.8rem, 7vw, 2.2rem); font-weight: 900; color: var(--success); letter-spacing: 1px; }
         .change-display-container.kurang .change-value { color: var(--danger); }
 
-                /* KALKULATOR FIX JUMBO (ANTI-TYPO) */
+        /* KALKULATOR FIX JUMBO (ANTI-TYPO) */
         .calc-container { background: var(--primary); padding: clamp(12px, 3vw, 15px); border-radius: 12px; margin-top: 15px; display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(8px, 2.5vw, 12px); box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
         .calc-display { grid-column: 1 / -1; background: #e0f7fa; color: #006064; text-align: right; padding: clamp(15px, 4vw, 20px); font-size: clamp(2.2rem, 8vw, 2.8rem); border-radius: 8px; font-weight: 900; border: 3px solid #b2ebf2; margin-bottom: 5px; font-family: monospace; overflow-x: auto; letter-spacing: 2px;}
         
-        /* Tombol Angka Utama - Ditambah min-height biar tinggi & tebal */
-        .calc-btn { 
-            background: #fff; color: var(--primary); 
-            padding: clamp(18px, 5vw, 24px) 0; 
-            min-height: clamp(65px, 16vw, 80px); /* Kunci agar tombol tetap kotak/tinggi */
-            font-size: clamp(1.6rem, 6.5vw, 2rem); 
-            border-radius: 8px; font-weight: 900; text-align: center; cursor: pointer; box-shadow: 0 5px 0 #bdc3c7; user-select: none; transition: 0.1s; display: flex; align-items: center; justify-content: center; 
-        }
+        .calc-btn { background: #fff; color: var(--primary); padding: clamp(18px, 5vw, 24px) 0; min-height: clamp(65px, 16vw, 80px); font-size: clamp(1.6rem, 6.5vw, 2rem); border-radius: 8px; font-weight: 900; text-align: center; cursor: pointer; box-shadow: 0 5px 0 #bdc3c7; user-select: none; transition: 0.1s; display: flex; align-items: center; justify-content: center; }
         .calc-btn:active { transform: translateY(5px); box-shadow: none; }
         .calc-btn.op { background: var(--warning); color: #fff; box-shadow: 0 5px 0 #d35400; font-size: clamp(1.5rem, 6vw, 1.8rem); }
         .calc-btn.clear { background: var(--danger); color: #fff; box-shadow: 0 5px 0 #c0392b; }
@@ -214,6 +209,7 @@
         .toast.show { transform: translateY(0); opacity: 1; }
         .toast.error { border-color: var(--danger); }
         .toast.syncing { border-color: var(--accent); background: rgba(52, 152, 219, 0.95); }
+        .toast.update { border-color: var(--warning); background: var(--primary); }
         
         .toggle-btn-std { font-size: 0.75rem; background: var(--border); color: var(--primary); padding: 6px 12px; border-radius: 6px; font-weight: bold; }
 
@@ -222,7 +218,6 @@
         .history-toggle-btn { display: inline-block; background: #e8f4fd; color: #2980b9; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; margin-top: 8px; border: 1px dashed #3498db; user-select: none;}
         .history-toggle-btn:active { background: #3498db; color: white; }
 
-        /* Wajib Paling Depan */
         #customAlert, #customConfirm, #customPrompt { z-index: 10005 !important; }
     </style>
 </head>
@@ -232,8 +227,7 @@
 
     <div id="receiptModal" class="modal-overlay">
         <div class="modal-box" style="background: #eef2f5;">
-            <div id="receiptArea" class="receipt-container">
-                </div>
+            <div id="receiptArea" class="receipt-container"></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 2vw, 10px); margin-top: 15px;">
                 <button class="btn-thumb" style="background: var(--border); color: #333;" onclick="closeModal('receiptModal')">TUTUP</button>
                 <button class="btn-thumb btn-success" onclick="window.print()">🖨️ CETAK</button>
@@ -383,9 +377,8 @@
             <button class="btn-thumb" onclick="closeModal('loginModal')" style="background: var(--bg); color: #555;">Nanti Saja (Guest)</button>
         </div>
     </div>
-
     <div class="main-container">
-        <div class="panel">
+                <div class="panel">
             <div class="user-profile" onclick="openProfileView()">
                 <div class="prof-compact-left">
                     <img src="icon-192.png" id="headProfileImg" class="prof-compact-pic">
@@ -394,12 +387,13 @@
                         <span id="userNameDisplay" style="font-size: clamp(0.9rem, 3.5vw, 1.1rem); font-weight: 900; color: var(--primary);">Kasir Lokal</span>
                     </div>
                 </div>
-                <div style="text-align: right;">
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
                     <span id="networkStatus" class="status-sync sync-offline">Menyiapkan...</span>
+                    <span onclick="event.stopPropagation(); toggleMute();" style="cursor: pointer; background: var(--surface); border: 1px solid var(--accent); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none; display: flex; align-items: center; gap: 4px;">
+                        Suara: <span id="muteBtnIcon" style="display: flex; align-items: center;"></span>
+                    </span>
                 </div>
-            </div>
-
-            <div class="shop-banner" id="shopNameDisplay">TOKO DAENG</div>
+            </div> <div class="shop-banner" id="shopNameDisplay">TOKO DAENG</div>
             
             <h2 class="header-toggle">
                 <div class="title-wrap">
@@ -481,10 +475,6 @@
                 </div>
             </div>
         </div>
-        <div class="panel">
-            <h2 style="color: var(--success); border-bottom: 3px solid var(--success);">
-                <div class="title-wrap">
-                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>MEJA KASIR UTAMA</span>
                 </div>
             </h2>
@@ -688,14 +678,13 @@
                 </div>
             </div>
         </div>
-
     </div>
 <script>
     // ==========================================
-    // BAGIAN 4: ENGINE Z-OFFLINE BULLETPROOF V7.0
+    // BAGIAN 4A: ENGINE Z-OFFLINE BULLETPROOF V7.1
     // ==========================================
 
-    const APP_VERSION = "4.06 LOCAL-FIRST"; 
+    const APP_VERSION = "4.10 CLOUD-SYNC"; 
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -704,6 +693,7 @@
     let sbClient = null;
     let currentUser = null;
     let APP_MODE = localStorage.getItem('pos_app_mode') || 'GUEST';
+    let realtimeChannel = null; // Tambahan buat dengerin update otomatis
 
     // --- DATABASE MEMORI ---
     let shopName = localStorage.getItem('pos_shop_name') || 'TOKO DAENG';
@@ -730,16 +720,12 @@
 
     // --- FUNGSI SAVE LOKAL + SINKRONISASI PINTAR ---
     function saveDB() {
-        // 1. WAJIB SIMPAN LOKAL DULU detik ini juga!
         if (APP_MODE === 'CLOUD' && currentUser) {
             localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
             localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
             localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
             
-            // 2. Beri stempel "PENDING" sebelum kirim, biar aman kalau gak sengaja kerefresh
             localStorage.setItem(`pos_pending_${currentUser.id}`, "true");
-            
-            // 3. Bangunin kurir buat setor ke Cloud
             pushToCloud();
         } else {
             localStorage.setItem('pos_guest_inv', JSON.stringify(inventory));
@@ -748,9 +734,7 @@
         }
     }
 
-    // ==========================================
-    // SISTEM KURIR ANTI-OVERWRITE BUG
-    // ==========================================
+    // --- SISTEM KURIR & REALTIME SYNC (ANTI GANGGU AKTIFITAS) ---
     async function pushToCloud() {
         if (APP_MODE !== 'CLOUD' || !currentUser) return;
         const netStatus = document.getElementById('networkStatus');
@@ -773,7 +757,6 @@
         const { error } = await sbClient.from('kasir_data').upsert(payload);
         
         if (!error) {
-            // Kalau sukses nembus awan, cabut stempel pending-nya
             localStorage.removeItem(`pos_pending_${currentUser.id}`);
             if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
         } else {
@@ -784,8 +767,6 @@
     async function fetchCloudData() {
         if (!navigator.onLine || APP_MODE !== 'CLOUD' || !currentUser) return;
         
-        // HUKUM MUTLAK: Kalau lokal masih punya data PENDING (belum setor), 
-        // HARAM hukumnya narik dari Cloud (Biar data lokal lu gak hilang tertimpa!)
         let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
         if (isPending === "true") {
             pushToCloud();
@@ -798,44 +779,62 @@
         const { data, error } = await sbClient.from('kasir_data').select('*').eq('user_id', currentUser.id).single();
         
         if (data) {
-            inventory = data.inventory || [];
-            debts = data.debts || [];
-            historyLog = data.history || [];
-            
-            // Backup ke lokal hasil tarikannya
+            inventory = data.inventory || []; debts = data.debts || []; historyLog = data.history || [];
             localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
             localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
             localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
-            renderAllUI();
+            renderAllUI(); // Render awal saat pertama narik
         }
         if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
     }
 
-    // --- BOOTING SUPER AMAN ---
-    function bootApp() {
+    // LISTENER BACKGROUND: Update UI diam-diam kalau ada perubahan di database
+    function setupRealtimeSync() {
+        if (!sbClient || !currentUser) return;
+        if (realtimeChannel) { sbClient.removeChannel(realtimeChannel); }
+        
+        realtimeChannel = sbClient.channel('custom-all-channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'kasir_data', filter: `user_id=eq.${currentUser.id}` }, (payload) => {
+                let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
+                // Hanya update jika tidak ada data lokal yang nunggu dikirim
+                if (isPending !== "true" && payload.new) {
+                    inventory = payload.new.inventory || []; debts = payload.new.debts || []; historyLog = payload.new.history || [];
+                    
+                    localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
+                    localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
+                    localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
+                    
+                    // Render ulang HANYA tabel, jangan sentuh cart kasir!
+                    renderInventory(); renderDebts(); renderHistory();
+                    showToast("Database disinkronkan otomatis!", "update");
+                }
+            })
+            .subscribe();
+    }
+
+    // --- BOOTING SUPER AMAN (ANTI LOGOUT SENDIRI) ---
+        function bootApp() {
+        updateMuteUI(); // <--- CUMA NAMBAHIN BARIS INI DOANG DI BAWAH KURUNG KURAWAL
+        
         document.getElementById('shopNameDisplay').innerText = shopName;
         if(units.length > 0) { document.getElementById('itemUnitVal').value = units[0]; document.getElementById('itemUnitText').innerText = units[0]; }
         
         const netStatus = document.getElementById('networkStatus');
         
         if (APP_MODE === 'CLOUD') {
-            // LANGSUNG RENDER DATA LOKAL! Gak usah nunggu Cloud muter-muter.
             const savedUser = JSON.parse(localStorage.getItem('sb-ytzkgfigcvdkdyxwsdbn-auth-token'));
             if(savedUser && savedUser.user) {
                 currentUser = savedUser.user;
                 document.getElementById('userNameDisplay').innerText = currentUser.user_metadata.full_name || "Kasir Cloud";
             }
-            loadDB(); 
-            renderAllUI();
-
+            loadDB(); renderAllUI();
             if(netStatus) { netStatus.innerText = "Menghubungkan..."; netStatus.className = "status-sync sync-pending"; }
             setTimeout(initSupabaseBackground, 200); 
         } else {
             currentUser = null;
             if(netStatus) { netStatus.innerText = "Offline Mode (Guest)"; netStatus.className = "status-sync sync-offline"; }
             document.getElementById('userNameDisplay').innerText = "Kasir Lokal";
-            loadDB();
-            renderAllUI();
+            loadDB(); renderAllUI();
             setTimeout(initSupabaseBackground, 200); 
         }
     }
@@ -843,17 +842,16 @@
     async function initSupabaseBackground() {
         const netStatus = document.getElementById('networkStatus');
         if (typeof window.supabase === 'undefined') {
-            if(netStatus) { netStatus.innerText = APP_MODE === 'CLOUD' ? "Sinyal Jelek (Aman di Lokal)" : "Z-Offline (Lokal)"; netStatus.className = "status-sync sync-offline"; }
+            if(netStatus) { netStatus.innerText = APP_MODE === 'CLOUD' ? "Offline (Aman di Lokal)" : "Z-Offline (Lokal)"; netStatus.className = "status-sync sync-offline"; }
             return;
         }
 
         if (!sbClient) { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
 
-        if (APP_MODE === 'CLOUD' && navigator.onLine) {
+        if (APP_MODE === 'CLOUD') {
             try {
-                const sessionPromise = sbClient.auth.getSession();
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout Koneksi')), 5000));
-                const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
+                // Jangan pakai Promise.race yang langsung mecat user. Cukup cek aja santai.
+                const { data: { session }, error } = await sbClient.auth.getSession();
                 
                 if (error) throw error;
                 if (session && session.user) {
@@ -864,21 +862,27 @@
                         document.getElementById('headProfileImg').src = currentUser.user_metadata.avatar_url;
                         document.getElementById('viewProfileImg').src = currentUser.user_metadata.avatar_url;
                     }
-                    
-                    // Tarik data cloud dengan aman
-                    await fetchCloudData();
-
+                    if(navigator.onLine) {
+                        await fetchCloudData();
+                        setupRealtimeSync(); // Aktifin mata-mata cloud
+                    } else {
+                        if(netStatus) { netStatus.innerText = "Offline (Aman di Lokal)"; netStatus.className = "status-sync sync-offline"; }
+                    }
                 } else { 
+                    // Kalau beneran ga ada session di cloud
                     APP_MODE = 'GUEST'; localStorage.setItem('pos_app_mode', 'GUEST'); loadDB(); renderAllUI();
                 }
             } catch(err) {
-                if(netStatus) { netStatus.innerText = "Sinyal Jelek (Aman di Lokal)"; netStatus.className = "status-sync sync-offline"; }
+                // FIX: Kalau timeout/jaringan jelek, JANGAN DI LOGOUT. Tetap di mode CLOUD tapi kasih status offline.
+                console.log("Koneksi Supabase terputus, stay di mode lokal.");
+                if(netStatus) { netStatus.innerText = "Offline (Aman di Lokal)"; netStatus.className = "status-sync sync-offline"; }
             }
         }
 
         if (!window.supabaseListenerAdded) {
             window.supabaseListenerAdded = true;
             sbClient.auth.onAuthStateChange(async (event, currentSession) => {
+                // Pastikan event SIGNED_OUT bukan dari error koneksi
                 if (event === 'SIGNED_OUT') { 
                     APP_MODE = 'GUEST'; localStorage.setItem('pos_app_mode', 'GUEST'); 
                 } 
@@ -888,6 +892,7 @@
                     document.getElementById('userNameDisplay').innerText = currentUser.user_metadata.full_name || "Kasir Cloud";
                     
                     await handleLoginMigration(currentUser); 
+                    setupRealtimeSync();
                     closeModal('loginModal'); closeModal('profileViewModal');
                 }
             });
@@ -905,16 +910,14 @@
             inventory = guestInv;
             debts = JSON.parse(localStorage.getItem('pos_guest_debt')) || [];
             historyLog = JSON.parse(localStorage.getItem('pos_guest_hist')) || [];
-            saveDB(); // Panggil fungsi saveDB agar langsung di-flag Pending dan dipush
+            saveDB(); 
             showToast("Data Guest diangkat ke Cloud!", "success");
         } else if (data) {
-            inventory = data.inventory || [];
-            debts = data.debts || [];
-            historyLog = data.history || [];
+            inventory = data.inventory || []; debts = data.debts || []; historyLog = data.history || [];
             localStorage.setItem(`pos_inv_${user.id}`, JSON.stringify(inventory));
             localStorage.setItem(`pos_debt_${user.id}`, JSON.stringify(debts));
             localStorage.setItem(`pos_hist_${user.id}`, JSON.stringify(historyLog));
-            showToast("Data lama ditarik dari Cloud...", "success");
+            showToast("Data ditarik dari Cloud...", "success");
         }
         
         localStorage.removeItem('pos_guest_inv'); localStorage.removeItem('pos_guest_debt'); localStorage.removeItem('pos_guest_hist');
@@ -927,6 +930,7 @@
         showToast("Memproses Logout...", "syncing");
         APP_MODE = 'GUEST'; currentUser = null; localStorage.setItem('pos_app_mode', 'GUEST');
         localStorage.removeItem('pos_guest_inv'); localStorage.removeItem('pos_guest_debt'); localStorage.removeItem('pos_guest_hist');
+        if (realtimeChannel) { sbClient.removeChannel(realtimeChannel); realtimeChannel = null; }
         if (sbClient) { try { await sbClient.auth.signOut(); } catch (err) {} }
         setTimeout(() => { window.location.reload(); }, 800);
     }
@@ -938,6 +942,7 @@
             if(netStatus) { netStatus.innerText = "Sinyal Balik! Menyinkronkan..."; netStatus.className = "status-sync sync-pending"; }
             let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
             if (isPending === "true") { pushToCloud(); } else { fetchCloudData(); }
+            setupRealtimeSync(); // Koneksi ulang socket realtime
         }
     });
     window.addEventListener('offline', () => { 
@@ -1030,6 +1035,87 @@
     function customConfirm(title, message, actionCallback) { document.getElementById('confirmTitle').innerText = title; document.getElementById('confirmMsg').innerText = message; document.getElementById('customConfirm').classList.add('active'); const btnYes = document.getElementById('confirmBtnYes'); const newBtnYes = btnYes.cloneNode(true); btnYes.parentNode.replaceChild(newBtnYes, btnYes); newBtnYes.addEventListener('click', () => { closeModal('customConfirm'); if(actionCallback) actionCallback(); }); }
     function customPrompt(title, message, defaultVal, actionCallback) { document.getElementById('promptTitle').innerText = title; document.getElementById('promptMsg').innerText = message; const input = document.getElementById('promptInput'); input.value = defaultVal || ''; document.getElementById('customPrompt').classList.add('active'); setTimeout(() => input.focus(), 100); const btnSave = document.getElementById('promptBtnSave'); const newBtnSave = btnSave.cloneNode(true); btnSave.parentNode.replaceChild(newBtnSave, btnSave); newBtnSave.addEventListener('click', () => { let val = document.getElementById('promptInput').value.trim(); closeModal('customPrompt'); if(actionCallback && val) actionCallback(val); }); }
     function showToast(msg, type = 'success') { const box = document.getElementById('toastBox'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerText = msg; box.appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000); }
+        // --- HELPER AUDIO & HAPTIC (FEEL PREMIUM) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    // Memori buat nginget status suara (Default: Suara Nyala)
+        let isAppMuted = localStorage.getItem('pos_muted') === 'true';
+
+    // Desain Icon SVG
+    const svgVolumeOn = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+    const svgVolumeOff = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+
+    function toggleMute() {
+        isAppMuted = !isAppMuted;
+        localStorage.setItem('pos_muted', isAppMuted);
+        showToast(isAppMuted ? "Mode Senyap Aktif" : "Suara Aktif", "update");
+        updateMuteUI();
+    }
+
+    function updateMuteUI() {
+        const btn = document.getElementById('muteBtnIcon');
+        // Inject SVG ke dalam tombol, bukan innerText lagi
+        if(btn) btn.innerHTML = isAppMuted ? svgVolumeOff : svgVolumeOn;
+    }
+
+    function initAudio() { 
+        if (isAppMuted) return; 
+        if (!audioCtx) { audioCtx = new AudioContext(); } 
+        if (audioCtx.state === 'suspended') audioCtx.resume(); 
+    }
+
+    // Suara "Tik" khas ketikan iPhone
+    function playTick() {
+        if (isAppMuted) return; 
+        if (navigator.vibrate) navigator.vibrate(10); 
+        initAudio();
+        try {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        } catch(e) {}
+    }
+
+    // Suara "Cek-Ring" khas koin untuk transaksi selesai
+    function playCekring() {
+        if (isAppMuted) return; 
+        if (navigator.vibrate) navigator.vibrate([20, 50, 30]); 
+        initAudio();
+        
+        try {
+            // Bunyi "Cek"
+            setTimeout(() => {
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.connect(gain1); gain1.connect(audioCtx.destination);
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                gain1.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc1.start(); osc1.stop(audioCtx.currentTime + 0.1);
+            }, 0);
+
+            // Bunyi "Ring" (ada jeda sedikit biar realistis)
+            setTimeout(() => {
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2); gain2.connect(audioCtx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(2000, audioCtx.currentTime);
+                gain2.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc2.start(); osc2.stop(audioCtx.currentTime + 0.4);
+            }, 80); 
+        } catch(e) {}
+    }
+
+    document.body.addEventListener('click', initAudio, { once: true });
 
     // --- MANAJEMEN SATUAN & BARANG ---
     function openUnitSelectModal() { document.getElementById('unitSelectContainer').innerHTML = units.map(u => `<div class="unit-option-btn" onclick="selectUnitOption('${u}')">${u}</div>`).join(''); document.getElementById('unitSelectModal').classList.add('active'); }
@@ -1078,14 +1164,13 @@
 
     // --- PENCARIAN & SMART SCALE V4 ---
     const searchInput = document.getElementById('searchInput'); const searchResults = document.getElementById('searchResults'); const nominalInput = document.getElementById('nominalInput');
-    function setQuickQty(val) { document.getElementById('itemQty').value = val; }
+    function setQuickQty(val) { document.getElementById('itemQty').value = val; playTick(); }
 
         searchInput.addEventListener('input', function() {
         const q = this.value.toLowerCase(); if (q.length < 1) { searchResults.style.display = 'none'; resetSelection(); return; }
         const list = inventory.filter(i => i.name.toLowerCase().includes(q));
         searchResults.innerHTML = list.map(i => { 
             const regex = new RegExp(`(${q})`, 'gi'); 
-            /* FIX: Warna hijau dibikin solid (#2ecc71) dan teks putih tebal biar sangat jelas */
             const highlightedName = i.name.replace(regex, `<span style="background: #2ecc71; color: #ffffff; border-radius: 4px; padding: 2px 6px; font-weight: 900; box-shadow: 0 2px 4px rgba(46,204,113,0.3);">$1</span>`); 
             return `<div class="search-item" onclick="selectItem('${i.name.replace(/'/g, "\\'")}', ${i.price}, '${i.unit}')"><span style="text-transform: capitalize;">${highlightedName}</span> <span style="color:var(--success);">Rp ${formatRp(i.price)}/${i.unit}</span></div>`; 
         }).join('');
@@ -1094,7 +1179,7 @@
 
     function selectItem(name, price, unit) {
         document.getElementById('searchInput').value = name; document.getElementById('selectedItemName').value = name; document.getElementById('selectedItemPrice').value = price; document.getElementById('selectedItemUnit').value = unit; searchResults.style.display = 'none';
-        document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = unit; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; nominalInput.value = ''; nominalInput.focus(); 
+        document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = unit; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; nominalInput.value = ''; nominalInput.focus(); playTick();
     }
 
     function resetSelection() { document.getElementById('selectedItemName').value = ''; document.getElementById('selectedItemPrice').value = ''; document.getElementById('selectedItemUnit').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('searchInput').value = ''; document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = 'Kg'; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; nominalInput.value = ''; }
@@ -1131,6 +1216,7 @@
     let calcRaw = '0'; 
     function formatCalcDisplay(rawStr) { let parts = rawStr.split(/([*/+\-])/); for(let i=0; i<parts.length; i++) { if(!['*', '/', '+', '-'].includes(parts[i]) && parts[i] !== '') { if(!parts[i].includes('.')) parts[i] = formatRp(parseInt(parts[i])); } else if (parts[i] === '*') parts[i] = ' X '; else if (parts[i] === '/') parts[i] = ' : '; else parts[i] = ` ${parts[i]} `; } return parts.join('').trim(); }
     function calcAction(action) {
+        playTick();
         const display = document.getElementById('calcDisplay');
         if (action === 'C') calcRaw = '0'; else if (action === 'DEL') calcRaw = calcRaw.length > 1 ? calcRaw.slice(0, -1) : '0';
         else if (action === '=') { try { let res = eval(calcRaw); calcRaw = Number.isInteger(res) ? res.toString() : res.toFixed(2).toString(); } catch { calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); } } 
@@ -1160,7 +1246,7 @@
         total = Math.round(total); document.getElementById('grandTotal').innerText = `Rp ${formatRp(total)}`; document.getElementById('grandTotal').dataset.val = total; calculateChange();
     }
 
-    function updateCartQty(id, delta) { let item = cart.find(x => x.id === id); if (item && !item.isManual) { let newQty = item.qty + delta; if (newQty <= 0) customConfirm('Hapus Barang?', 'Jumlah 0. Hapus?', () => removeFromCart(id)); else { item.qty = newQty; item.subtotal = item.price * item.qty; renderCart(); } } }
+    function updateCartQty(id, delta) { playTick(); let item = cart.find(x => x.id === id); if (item && !item.isManual) { let newQty = item.qty + delta; if (newQty <= 0) customConfirm('Hapus Barang?', 'Jumlah 0. Hapus?', () => removeFromCart(id)); else { item.qty = newQty; item.subtotal = item.price * item.qty; renderCart(); } } }
     function openCartQtyModal(id, name, unit, currentQty) { document.getElementById('cartQtyId').value = id; document.getElementById('cartQtyMsg').innerText = `Kuantitas ${name} (${unit})`; const input = document.getElementById('cartQtyInput'); input.value = parseFloat(currentQty.toFixed(3)); document.getElementById('cartQtyModal').classList.add('active'); setTimeout(() => input.focus(), 100); }
     function saveCartQty() { let id = parseFloat(document.getElementById('cartQtyId').value); let newQty = parseFloat(document.getElementById('cartQtyInput').value); if (newQty > 0) { let item = cart.find(x => x.id === id); if (item) { item.qty = newQty; item.subtotal = item.price * newQty; renderCart(); } } closeModal('cartQtyModal'); }
     function editManualPrice(id, currentPrice) { customPrompt('Edit Barang Manual', 'Masukkan harga baru:', formatRp(currentPrice), (newVal) => { const newPrice = parseRp(newVal); if (newPrice > 0) { let item = cart.find(x => x.id === id); if (item && item.isManual) { item.price = newPrice; item.subtotal = newPrice; renderCart(); showToast("Harga diubah!"); } } }); }
@@ -1191,9 +1277,11 @@
         const txData = { id: Date.now(), date: new Date().toLocaleString('id-ID'), items: itemsFormatted, cartSnapshot: JSON.parse(JSON.stringify(cart)), total: total, cash: cash, status: status, borrower: borrower };
         historyLog.unshift(txData); 
         
-        saveDB(); // Langsung amankan ke lokal + flag pending sync
+        saveDB(); 
         
         cart = []; manualItemCounter = 1; document.getElementById('cashInput').value = ''; document.getElementById('debtorName').value = ''; document.getElementById('changeDisplayBox').classList.remove('kurang'); document.getElementById('changeLabelText').innerText = "Status / Kembalian"; document.getElementById('changeDue').innerText = "Rp 0"; document.getElementById('debtSection').style.display = 'none';
+        
+        playCekring(); // Bunyi khas koin masuk mesin
         renderCart(); renderDebts(); renderHistory(); document.getElementById('searchInput').focus(); showToast("Transaksi Berhasil Disimpan!");
     }
 
@@ -1217,7 +1305,7 @@
     }
 
     function openDebtPaymentModal(id) { const debtIdx = debts.findIndex(x => x.id === id); if(debtIdx > -1) { const d = debts[debtIdx]; document.getElementById('debtPaymentId').value = id; document.getElementById('debtMaxAmount').value = d.amount; document.getElementById('debtPaymentMsg').innerHTML = `Sisa Hutang: <b>Rp ${formatRp(d.amount)}</b><br>Atas Nama: <b>${d.name}</b>`; document.getElementById('debtPaymentInput').value = ''; document.getElementById('debtPaymentModal').classList.add('active'); } }
-    function setLunasAmount() { const maxAmount = document.getElementById('debtMaxAmount').value; const inputElem = document.getElementById('debtPaymentInput'); inputElem.value = maxAmount; formatRupiahUI(inputElem); showToast("Nominal Full Diisi!"); }
+    function setLunasAmount() { const maxAmount = document.getElementById('debtMaxAmount').value; const inputElem = document.getElementById('debtPaymentInput'); inputElem.value = maxAmount; formatRupiahUI(inputElem); showToast("Nominal Full Diisi!"); playTick(); }
 
     function processDebtPayment() {
         const id = parseInt(document.getElementById('debtPaymentId').value); const payAmount = parseRp(document.getElementById('debtPaymentInput').value); const debtIdx = debts.findIndex(x => x.id === id);
@@ -1226,7 +1314,7 @@
             if(payAmount >= d.amount) { statusStr = "LUNAS"; msgStr = `PELUNASAN PIUTANG:<br><b style="color:var(--success);">A.N: ${d.name}</b>`; debts.splice(debtIdx, 1); showToast(`Piutang ${d.name} LUNAS!`); } 
             else { statusStr = "CICIL"; msgStr = `CICILAN PIUTANG:<br><b style="color:var(--warning);">A.N: ${d.name}</b>`; debts[debtIdx].amount -= payAmount; showToast(`Cicilan dari ${d.name} diterima!`); }
             const logData = { id: Date.now(), date: new Date().toLocaleString('id-ID'), items: msgStr, total: d.amount, cash: payAmount, status: statusStr, isDebtPayment: true, borrower: d.name };
-            historyLog.unshift(logData); saveDB(); renderDebts(); renderHistory(); closeModal('debtPaymentModal');
+            historyLog.unshift(logData); saveDB(); renderDebts(); renderHistory(); closeModal('debtPaymentModal'); playCekring();
         } else { customAlert("Input Tidak Valid", "Masukkan nominal pembayaran!"); }
     }
 
@@ -1261,8 +1349,29 @@
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker PWA Berhasil Terdaftar!', reg.scope))
+            .then(reg => {
+                console.log('Service Worker terdaftar!', reg.scope);
+                // Deteksi kalau ada update file dari server (GitHub)
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Update tersedia, refresh tab tanpa buang sesi lokal
+                            showToast("Update terbaru dipasang! Memuat ulang...", "update");
+                            setTimeout(() => window.location.reload(), 1500);
+                        }
+                    };
+                };
+            })
             .catch(err => console.log('Service Worker Gagal!', err));
+        });
+        
+        // Handle pergantian cache
+        let refreshing;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
         });
     }
 </script>
