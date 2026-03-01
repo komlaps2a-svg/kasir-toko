@@ -710,7 +710,7 @@
     // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.11 CLOUD-SYNC"; 
+    const APP_VERSION = "4.12 CLOUD-SYNC"; 
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -1359,7 +1359,17 @@
             else if (filterVal === '7days') cutoffTime = startOfToday - (6 * 24 * 60 * 60 * 1000);
             historyLog = historyLog.filter(h => h.id < cutoffTime);
         }
-        saveDB(); renderHistory(); showToast("Riwayat berhasil dibersihkan!"); 
+                saveDB(); renderHistory(); showToast("Riwayat berhasil dibersihkan!"); 
+    }
+
+    function requestShopNameEdit() { 
+        customPrompt('Ubah Nama Toko', 'Masukkan nama toko baru:', shopName, (newName) => { 
+            shopName = newName.toUpperCase(); 
+            localStorage.setItem('pos_shop_name', shopName); 
+            document.getElementById('shopNameDisplay').innerText = shopName; 
+            pushToCloud(); 
+            showToast("Nama Toko Berhasil Diubah!"); 
+        }); 
     }
 
     // RENDER SEMUA UI
