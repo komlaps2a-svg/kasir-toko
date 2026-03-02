@@ -371,7 +371,7 @@
                     </a>
                     <a href="https://sociabuzz.com/engyourbae/tribe" target="_blank" class="btn-sosmed sw">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        Traktir
+                        Traktir Kopi
                     </a>
                 </div>
             </div>
@@ -423,7 +423,7 @@
                 </div>
             </div> 
             
-            <div class="shop-banner" id="shopNameDisplay">TOKO DAENG</div>
+            <div class="shop-banner" id="shopNameDisplay">EDIT NAMA TOKO</div>
             
             <h2 class="header-toggle">
                 <div class="title-wrap">
@@ -729,11 +729,20 @@
                                 <strong id="dailyDebt">Rp 0</strong>
                             </div>
                         </div>
-
-                        <div style="margin-bottom: 20px;">
-                            <button class="btn-danger" style="padding: clamp(12px, 4vw, 18px); font-size: clamp(1rem, 3.5vw, 1.1rem);" onclick="confirmClearHistory()">
-                                <svg style="width: 18px; height: 18px; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path></svg>
-                                HAPUS DATA (<span id="deleteBtnLabel">HARI INI</span>)
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                            <button class="btn-danger" style="padding: 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer;" onclick="confirmClearHistory()">
+                                <div style="display: flex; align-items: center; gap: 5px; font-weight: 900; font-size: clamp(0.7rem, 2.5vw, 0.85rem);">
+                                    <svg class="icon-svg" style="margin:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path></svg>
+                                    HAPUS RIWAYAT
+                                </div>
+                                <span id="deleteBtnLabel" style="font-size: 0.65rem; background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px; font-weight: bold; color: #fff;">HARI INI</span>
+                            </button>
+                            <button style="background: var(--warning); color: white; padding: 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer;" onclick="confirmClearDashboard()">
+                                <div style="display: flex; align-items: center; gap: 5px; font-weight: 900; font-size: clamp(0.7rem, 2.5vw, 0.85rem);">
+                                    <svg class="icon-svg" style="margin:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><polyline points="16 16 21 16 21 21"></polyline></svg>
+                                    RESET OMZET
+                                </div>
+                                <span id="deleteDashLabel" style="font-size: 0.65rem; background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px; font-weight: bold; color: #fff;">HARI INI</span>
                             </button>
                         </div>
 
@@ -761,7 +770,7 @@
     // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.13 SMART-CART & CLEAN-TOAST"; 
+    const APP_VERSION = "4.14 SMART-CART & CLEAN-TOAST"; 
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -773,7 +782,7 @@
     let realtimeChannel = null;
 
     // --- DATABASE MEMORI ---
-    let shopName = localStorage.getItem('pos_shop_name') || 'TOKO DAENG';
+    let shopName = localStorage.getItem('pos_shop_name') || 'EDIT NAMA TOKO';
     let units = JSON.parse(localStorage.getItem('pos_units')) || ['Kg', 'Ons', 'Liter', 'Pcs', 'Bks', 'Satuan'];
     let inventory = []; let debts = []; let historyLog = []; let cart = []; let manualItemCounter = 1;
 
@@ -1319,14 +1328,30 @@
     const searchInput = document.getElementById('searchInput'); const searchResults = document.getElementById('searchResults'); const nominalInput = document.getElementById('nominalInput');
     function setQuickQty(val) { document.getElementById('itemQty').value = val; playTick(); }
 
-    searchInput.addEventListener('input', function() {
-        const q = this.value.toLowerCase(); if (q.length < 1) { searchResults.style.display = 'none'; resetSelection(); return; }
+        searchInput.addEventListener('input', function() {
+        const q = this.value.toLowerCase(); 
+        if (q.length < 1) { searchResults.style.display = 'none'; resetSelection(); return; }
+        
         const list = inventory.filter(i => i.name.toLowerCase().includes(q));
+        
         searchResults.innerHTML = list.map(i => { 
             const regex = new RegExp(`(${q})`, 'gi'); 
             const highlightedName = i.name.replace(regex, `<span style="background: #2ecc71; color: #ffffff; border-radius: 4px; padding: 2px 6px; font-weight: 900; box-shadow: 0 2px 4px rgba(46,204,113,0.3);">$1</span>`); 
-            return `<div class="search-item" onclick="selectItem('${i.name.replace(/'/g, "\\'")}', ${i.price}, '${i.unit}')"><span style="text-transform: capitalize;">${highlightedName}</span> <span style="color:var(--success);">Rp ${formatRp(i.price)}/${i.unit}</span></div>`; 
+            
+            // Logika untuk menampilkan Slot Eceran/Grosir di bawah nama barang
+            let eceranBadge = '';
+            if (i.eceranNominal && i.eceranQty) eceranBadge += `<span style="color:var(--warning); font-size:0.75rem; font-weight:800; display:block; margin-top:2px;">(Slot 1: Rp${formatRp(i.eceranNominal)} = ${i.eceranQty} ${i.eceranUnit || i.unit})</span>`;
+            if (i.eceranNominal2 && i.eceranQty2) eceranBadge += `<span style="color:var(--accent); font-size:0.75rem; font-weight:800; display:block; margin-top:2px;">(Slot 2: Rp${formatRp(i.eceranNominal2)} = ${i.eceranQty2} ${i.eceranUnit2 || i.unit})</span>`;
+            
+            return `<div class="search-item" style="align-items: flex-start;" onclick="selectItem('${i.name.replace(/'/g, "\\'")}', ${i.price}, '${i.unit}')">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="text-transform: capitalize;">${highlightedName}</span>
+                    ${eceranBadge}
+                </div>
+                <span style="color:var(--success); white-space: nowrap; margin-left: 10px;">Rp ${formatRp(i.price)}/${i.unit}</span>
+            </div>`; 
         }).join('');
+        
         searchResults.style.display = list.length > 0 ? 'block' : 'none';
     });
 
@@ -1595,7 +1620,7 @@
 
     function toggleHistoryDetail(id, btn, count) { const detailDiv = document.getElementById('hist-detail-' + id); if(detailDiv.classList.contains('active')) { detailDiv.classList.remove('active'); btn.innerText = `Lihat ${count} ..`; } else { detailDiv.classList.add('active'); btn.innerText = `Tutup Detail [-]`; } }
 
-    // --- RIWAYAT PINTAR & FILTER WAKTU ---
+        // --- RIWAYAT PINTAR & FILTER WAKTU ---
     function selectHistoryFilter(val, textLabel) {
         document.getElementById('historyFilterVal').value = val;
         document.getElementById('historyFilterText').innerText = textLabel;
@@ -1610,10 +1635,14 @@
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
         const btnLabel = document.getElementById('deleteBtnLabel');
-        if(filterVal === 'today') btnLabel.innerText = "HARI INI";
-        else if(filterVal === '3days') btnLabel.innerText = "3 HARI";
-        else if(filterVal === '7days') btnLabel.innerText = "7 HARI";
-        else btnLabel.innerText = "SEMUA";
+        const dashLabel = document.getElementById('deleteDashLabel');
+        let labelText = "SEMUA";
+        if(filterVal === 'today') labelText = "HARI INI";
+        else if(filterVal === '3days') labelText = "3 HARI";
+        else if(filterVal === '7days') labelText = "7 HARI";
+        
+        if (btnLabel) btnLabel.innerText = labelText;
+        if (dashLabel) dashLabel.innerText = labelText;
 
         return historyLog.filter(h => {
             if (filterVal === 'all') return true;
@@ -1626,23 +1655,41 @@
     }
 
     function renderHistory() {
-        const filteredLog = getFilteredHistory();
+        const timeFilteredLog = getFilteredHistory();
         let omzet = 0, tunai = 0, piutang = 0;
-        
-        document.getElementById('historyList').innerHTML = filteredLog.map(h => {
-            if(!h.isDebtPayment) { 
-                omzet += h.total; 
-                tunai += Math.min(h.total, h.cash); 
-                if (h.status === "HUTANG") piutang += (h.total - h.cash); 
+        let historyHTML = '';
+
+        timeFilteredLog.forEach(h => {
+            // Hitung dasbor HANYA JIKA dashboardDeleted belum true
+            if (!h.dashboardDeleted) {
+                if(!h.isDebtPayment) { 
+                    omzet += h.total; 
+                    tunai += Math.min(h.total, h.cash); 
+                    if (h.status === "HUTANG") piutang += (h.total - h.cash); 
+                }
             }
-            let badgeColor = "var(--primary)"; if (h.status === "LUNAS") badgeColor = "var(--success)"; if (h.status === "HUTANG") badgeColor = "var(--danger)"; if (h.status === "CICIL") badgeColor = "var(--warning)";
-            let itemsArr = h.items.split('<br>').filter(x => x.trim() !== ''); let visibleItems = [itemsArr[0]]; let hiddenItems = [];
-            for(let i = 1; i < itemsArr.length; i++) { if(itemsArr[i].includes("A.N:")) { visibleItems.push(itemsArr[i]); } else { hiddenItems.push(itemsArr[i]); } }
-            let displayItems = `<div style="font-weight: bold;">${visibleItems.join('<br>')}</div>`;
-            if (hiddenItems.length > 0) { displayItems += `<div id="hist-detail-${h.id}" class="history-full">${hiddenItems.join('<br>')}</div><div class="history-toggle-btn" onclick="toggleHistoryDetail(${h.id}, this, ${hiddenItems.length})">Lihat ${hiddenItems.length} ..</div>`; }
-            return `<tr><td style="font-size:clamp(0.7rem, 2.5vw, 0.85rem);">${h.date}</td><td style="text-transform: capitalize; line-height:1.4; font-size:clamp(0.85rem, 3vw, 0.95rem);">${displayItems}</td><td style="font-size:clamp(0.8rem, 3vw, 0.9rem);"><b>Total:</b> Rp ${formatRp(h.total)}<br><b>Tunai:</b> Rp ${formatRp(h.cash)}</td><td style="text-align: center; vertical-align: middle;"><div style="display:flex; flex-direction:column; gap:6px; align-items:center;"><span class="badge-status" style="background: ${badgeColor}; padding: 4px 0; width: 100%; border-radius: 4px;">${h.status}</span><button class="btn-primary btn-table" style="width: 100%; border-radius:4px; height: clamp(28px, 8vw, 32px);" onclick="printReceipt(${h.id})"><svg class="icon-svg" style="margin-right:0; width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button></div></td></tr>`;
-        }).join('');
+
+            // Tampilkan di tabel HANYA JIKA historyDeleted belum true
+            if (!h.historyDeleted) {
+                let badgeColor = "var(--primary)"; 
+                if (h.status === "LUNAS") badgeColor = "var(--success)"; 
+                if (h.status === "HUTANG") badgeColor = "var(--danger)"; 
+                if (h.status === "CICIL") badgeColor = "var(--warning)";
+                
+                let itemsArr = h.items.split('<br>').filter(x => x.trim() !== ''); 
+                let visibleItems = [itemsArr[0]]; let hiddenItems = [];
+                for(let i = 1; i < itemsArr.length; i++) { 
+                    if(itemsArr[i].includes("A.N:")) visibleItems.push(itemsArr[i]); 
+                    else hiddenItems.push(itemsArr[i]); 
+                }
+                let displayItems = `<div style="font-weight: bold;">${visibleItems.join('<br>')}</div>`;
+                if (hiddenItems.length > 0) { displayItems += `<div id="hist-detail-${h.id}" class="history-full">${hiddenItems.join('<br>')}</div><div class="history-toggle-btn" onclick="toggleHistoryDetail(${h.id}, this, ${hiddenItems.length})">Lihat ${hiddenItems.length} ..</div>`; }
+                
+                historyHTML += `<tr><td style="font-size:clamp(0.7rem, 2.5vw, 0.85rem);">${h.date}</td><td style="text-transform: capitalize; line-height:1.4; font-size:clamp(0.85rem, 3vw, 0.95rem);">${displayItems}</td><td style="font-size:clamp(0.8rem, 3vw, 0.9rem);"><b>Total:</b> Rp ${formatRp(h.total)}<br><b>Tunai:</b> Rp ${formatRp(h.cash)}</td><td style="text-align: center; vertical-align: middle;"><div style="display:flex; flex-direction:column; gap:6px; align-items:center;"><span class="badge-status" style="background: ${badgeColor}; padding: 4px 0; width: 100%; border-radius: 4px;">${h.status}</span><button class="btn-primary btn-table" style="width: 100%; border-radius:4px; height: clamp(28px, 8vw, 32px);" onclick="printReceipt(${h.id})"><svg class="icon-svg" style="margin-right:0; width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button></div></td></tr>`;
+            }
+        });
         
+        document.getElementById('historyList').innerHTML = historyHTML;
         document.getElementById('dailyOmzet').innerText = `Rp ${formatRp(omzet)}`; 
         document.getElementById('dailyCash').innerText = `Rp ${formatRp(tunai)}`; 
         document.getElementById('dailyDebt').innerText = `Rp ${formatRp(piutang)}`;
@@ -1651,26 +1698,57 @@
     function confirmClearHistory() {
         const filterVal = document.getElementById('historyFilterVal').value;
         let msg = "";
-        if(filterVal === 'today') msg = "Yakin HAPUS PERMANEN riwayat transaksi HARI INI saja?";
-        else if(filterVal === '3days') msg = "Yakin HAPUS PERMANEN riwayat 3 HARI TERAKHIR?";
-        else if(filterVal === '7days') msg = "Yakin HAPUS PERMANEN riwayat 7 HARI TERAKHIR?";
-        else msg = "Yakin HAPUS SEMUA riwayat transaksi dari awal?";
-        customConfirm('Hapus Data Pintar', msg, clearHistory);
+        if(filterVal === 'today') msg = "Yakin sembunyikan riwayat tabel HARI INI? (Angka Dasbor Omzet tidak akan hilang)";
+        else if(filterVal === '3days') msg = "Yakin sembunyikan riwayat tabel 3 HARI TERAKHIR?";
+        else if(filterVal === '7days') msg = "Yakin sembunyikan riwayat tabel 7 HARI TERAKHIR?";
+        else msg = "Yakin bersihkan SEMUA riwayat tabel dari awal?";
+        customConfirm('Bersihkan Riwayat', msg, clearHistory);
     }
 
     function clearHistory() {
+        processDeletion('history');
+        showToast("Riwayat tabel berhasil dibersihkan!"); 
+    }
+
+    function confirmClearDashboard() {
         const filterVal = document.getElementById('historyFilterVal').value;
-        if (filterVal === 'all') { historyLog = []; } 
-        else {
-            const now = new Date();
-            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-            let cutoffTime = 0;
-            if (filterVal === 'today') cutoffTime = startOfToday;
-            else if (filterVal === '3days') cutoffTime = startOfToday - (2 * 24 * 60 * 60 * 1000);
-            else if (filterVal === '7days') cutoffTime = startOfToday - (6 * 24 * 60 * 60 * 1000);
-            historyLog = historyLog.filter(h => h.id < cutoffTime);
-        }
-        saveDB(); renderHistory(); showToast("Riwayat berhasil dibersihkan!"); 
+        let msg = "";
+        if(filterVal === 'today') msg = "Yakin RESET ANGKA DASBOR (Omzet, Tunai, Piutang) untuk HARI INI? Angka akan jadi 0.";
+        else if(filterVal === '3days') msg = "Yakin RESET ANGKA DASBOR untuk 3 HARI TERAKHIR?";
+        else if(filterVal === '7days') msg = "Yakin RESET ANGKA DASBOR untuk 7 HARI TERAKHIR?";
+        else msg = "Yakin RESET SEMUA ANGKA DASBOR dari awal? Ini tidak bisa dikembalikan.";
+        customConfirm('Reset Dasbor', msg, clearDashboard);
+    }
+
+    function clearDashboard() {
+        processDeletion('dashboard');
+        showToast("Angka Dasbor berhasil di-reset!"); 
+    }
+
+    function processDeletion(target) {
+        const filterVal = document.getElementById('historyFilterVal').value;
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        let cutoffTime = 0;
+        
+        if (filterVal === 'today') cutoffTime = startOfToday;
+        else if (filterVal === '3days') cutoffTime = startOfToday - (2 * 24 * 60 * 60 * 1000);
+        else if (filterVal === '7days') cutoffTime = startOfToday - (6 * 24 * 60 * 60 * 1000);
+
+        // Update JSON file berdasarkan target yang dihapus
+        historyLog = historyLog.map(h => {
+            if (filterVal === 'all' || h.id >= cutoffTime) {
+                if (target === 'history') h.historyDeleted = true;
+                if (target === 'dashboard') h.dashboardDeleted = true;
+            }
+            return h;
+        });
+
+        // Pembersihan sampah: Jika sudah dihapus dari tabel DAN dasbor, hapus permanen dari memori
+        historyLog = historyLog.filter(h => !(h.historyDeleted && h.dashboardDeleted));
+        
+        saveDB(); 
+        renderHistory(); 
     }
 
     function requestShopNameEdit() { 
