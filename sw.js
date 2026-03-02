@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kasir-daeng-v4.13'; // Ganti angkanya misal jadi v4.11 kalau lu ada update codingan besar di Github
+const CACHE_NAME = 'kasir-daeng-v4.14'; // Ganti angkanya misal jadi v4.11 kalau lu ada update codingan besar di Github
 const urlsToCache = [
   './',
   './index.html',
