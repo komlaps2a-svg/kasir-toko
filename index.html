@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Sistem Kasir Daeng - Waktu & Filter Pintar</title>
+    <title>Sistem Kasir Daeng - Eceran Custom Satuan</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a252f">
@@ -28,7 +28,7 @@
         body { 
             background-color: var(--bg); color: var(--text); 
             padding: clamp(10px, 3vw, 15px); 
-            max-width: 500px; /* Kunci ukuran maksimal biar gak melar di tablet/HP layar lebar */
+            max-width: 500px; 
             margin: 0 auto; 
             min-height: 100vh; overflow-x: hidden; overflow-y: auto; position: relative; 
         }
@@ -51,7 +51,7 @@
 
         /* Input & Forms */
         .form-group { margin-bottom: 15px; width: 100%; }
-        label { display: block; margin-bottom: 6px; font-weight: 800; font-size: clamp(0.8rem, 3vw, 0.9rem); color: #444; }
+        label { display: block; margin-bottom: 6px; font-weight: 800; font-size: clamp(0.75rem, 3vw, 0.85rem); color: #444; }
         input, .custom-select { 
             width: 100%; 
             padding: clamp(12px, 3.5vw, 16px); 
@@ -79,6 +79,11 @@
         button.btn-danger { background: var(--danger); color: white; }
         button.btn-thumb { min-height: 45px; padding: 10px; font-size: clamp(0.85rem, 3vw, 0.95rem); }
         .btn-edit-small { background: var(--accent); color: white; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; border: none; display: inline-flex; width: auto; }
+        
+        /* TOMBOL KHUSUS CSV */
+        .btn-csv { background: var(--surface); border: 2px solid var(--primary); color: var(--primary); font-size: clamp(0.7rem, 2.5vw, 0.8rem); padding: 8px 10px; border-radius: 8px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-transform: uppercase; transition: 0.2s; flex: 1; }
+        .btn-csv:active { background: var(--primary); color: #fff; }
+
         .unit-option-btn { background: var(--border); color: var(--primary); padding: 15px; border-radius: 8px; font-size: 1rem; font-weight: 900; text-align: center; cursor: pointer; text-transform: uppercase; }
         .unit-option-btn:active { background: var(--accent); color: white; }
 
@@ -108,6 +113,12 @@
         .eceran-box.active { display: block; }
         .eceran-toggle-btn { background: transparent; border: 2px solid var(--warning); color: var(--warning); padding: 10px; font-size: 0.85rem; margin-bottom: 15px; }
         .eceran-toggle-btn:active { background: var(--warning); color: #fff; }
+
+        /* GRID UNTUK INPUT ECERAN (Biar 3 Kolom Muat) */
+        .eceran-grid-row { display: flex; gap: clamp(6px, 1.5vw, 10px); align-items: flex-end; margin-bottom: 10px; border-bottom: 1px dashed var(--warning); padding-bottom: 10px; }
+        .eceran-col-uang { flex: 1.2; }
+        .eceran-col-qty { flex: 1; }
+        .eceran-col-satuan { flex: 1; }
 
         /* Auto-correct & Dropdown */
         .search-container { position: relative; }
@@ -162,6 +173,7 @@
         .dash-box { padding: 12px 6px; border-radius: 10px; text-align: center; color: white; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
         .dash-box span { font-size: 0.7rem; opacity: 0.9; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
         .dash-box strong { font-size: clamp(0.9rem, 3.5vw, 1.1rem); font-weight: 900; word-break: break-word; }
+        
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.2s; padding: 15px; overflow-y: auto; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
@@ -203,8 +215,9 @@
             .btn-thumb, .modal-title, #toastBox { display: none !important; }
         }
 
-        .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
-        .toast { background: var(--primary); color: white; padding: 16px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); transform: translateY(-100px); opacity: 0; transition: 0.4s; border-bottom: 4px solid var(--success); }
+        /* TOAST NOTIFICATIONS (DIPERBARUI) */
+        .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; width: 90%; max-width: 400px; pointer-events: none; }
+        .toast { background: var(--primary); color: white; padding: 16px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); transform: translateY(-100px); opacity: 0; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-bottom: 4px solid var(--success); width: 100%; }
         .toast.show { transform: translateY(0); opacity: 1; }
         .toast.error { border-color: var(--danger); }
         .toast.syncing { border-color: var(--accent); background: rgba(52, 152, 219, 0.95); }
@@ -245,10 +258,10 @@
     <div id="customConfirm" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title" id="confirmTitle">Konfirmasi</div>
-            <div class="modal-msg" id="confirmMsg">Apakah Anda yakin?</div>
+            <div class="modal-msg" id="confirmMsg" style="word-break: break-word;">Apakah Anda yakin?</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(8px, 2vw, 10px);">
                 <button class="btn-thumb" style="background: var(--border); color: #333;" onclick="closeModal('customConfirm')">BATAL</button>
-                <button class="btn-thumb btn-danger" id="confirmBtnYes">YA, YAKIN</button>
+                <button class="btn-thumb btn-danger" id="confirmBtnYes">YA, LANJUT</button>
             </div>
         </div>
     </div>
@@ -310,6 +323,7 @@
     </div>
 
     <input type="file" id="profileUploader" accept="image/*" class="visually-hidden">
+    <input type="file" id="csvUploader" accept=".csv, text/csv, application/csv, text/comma-separated-values" class="visually-hidden">
 
     <div class="modal-overlay" id="profileViewModal">
         <div class="modal-box" style="padding: clamp(20px, 5vw, 25px) clamp(15px, 4vw, 20px);">
@@ -376,6 +390,7 @@
             <button class="btn-thumb" onclick="closeModal('loginModal')" style="background: var(--bg); color: #555;">Nanti Saja (Guest)</button>
         </div>
     </div>
+    
     <div id="filterTimeModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-title">Pilih Waktu Riwayat</div>
@@ -388,7 +403,9 @@
             <button class="btn-thumb" style="background: var(--danger); color: white; width: 100%;" onclick="closeModal('filterTimeModal')">TUTUP</button>
         </div>
     </div>
+
     <div class="main-container">
+        
         <div class="panel">
             <div class="user-profile" onclick="openProfileView()">
                 <div class="prof-compact-left">
@@ -398,13 +415,15 @@
                         <span id="userNameDisplay" style="font-size: clamp(0.9rem, 3.5vw, 1.1rem); font-weight: 900; color: var(--primary);">Kasir Lokal</span>
                     </div>
                 </div>
-                                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
                     <span id="networkStatus" class="status-sync sync-offline">Menyiapkan...</span>
                     <span onclick="event.stopPropagation(); toggleMute();" style="cursor: pointer; background: var(--surface); border: 1px solid var(--accent); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none; display: flex; align-items: center; gap: 4px;">
                         Suara: <span id="muteBtnIcon" style="display: flex; align-items: center;"></span>
                     </span>
                 </div>
-            </div> <div class="shop-banner" id="shopNameDisplay">TOKO DAENG</div>
+            </div> 
+            
+            <div class="shop-banner" id="shopNameDisplay">TOKO DAENG</div>
             
             <h2 class="header-toggle">
                 <div class="title-wrap">
@@ -438,37 +457,70 @@
             <div class="panel-wrapper" id="dbContent">
                 <div class="panel-content">
                     <div class="panel-inner">
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <button class="btn-csv" onclick="triggerDownloadCSV()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Download CSV
+                            </button>
+                            <button class="btn-csv" onclick="triggerCSVUpload()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                Upload CSV
+                            </button>
+                        </div>
+
                         <div class="form-group">
-                            <input type="text" id="itemName" placeholder="Nama Barang (Cth: Gandum)" style="text-transform: capitalize;">
+                            <input type="text" id="itemName" placeholder="Nama Barang (Cth: Pampers / Gandum)" style="text-transform: capitalize;">
                         </div>
                         <div style="display: flex; gap: clamp(6px, 2vw, 10px); margin-bottom: 15px;">
                             <input type="text" id="itemPrice" inputmode="numeric" placeholder="Harga / Satuan (Rp)" style="flex: 2;" oninput="formatRupiahUI(this)">
                             <div id="itemUnitDisplay" class="custom-select" style="flex: 1;" onclick="openUnitSelectModal()">
-                                <span id="itemUnitText">KG</span>
+                                <span id="itemUnitText">BKS</span>
                                 <span>▼</span>
                             </div>
-                            <input type="hidden" id="itemUnitVal" value="Kg">
+                            <input type="hidden" id="itemUnitVal" value="Bks">
                         </div>
 
                         <button class="eceran-toggle-btn" id="btnToggleEceran" onclick="toggleUI('eceranBox', 'btnToggleEceranText')" style="width:100%; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                            <span id="btnToggleEceranText">Atur Patokan Eceran Khusus [+]</span>
+                            <span id="btnToggleEceranText">Atur Grosir / Eceran Cepat [+]</span>
                         </button>
 
                         <div id="eceranBox" class="panel-wrapper collapsed" style="margin-bottom: 15px;">
                             <div class="panel-content">
                                 <div class="eceran-box active">
-                                    <p style="font-size:clamp(0.75rem, 2.5vw, 0.85rem); color:var(--warning); font-weight:800; margin-bottom:10px; line-height:1.4;">Bila pembeli membeli barang ini dengan uang pas tertentu, abaikan hitungan matematika dan paskan timbangan ke:</p>
-                                    <div style="display: flex; gap: clamp(6px, 2vw, 10px);">
-                                        <div style="flex:1;">
-                                            <label style="font-size:clamp(0.7rem, 2.5vw, 0.8rem);">Jika Uang (Rp)</label>
-                                            <input type="text" id="eceranNominal" inputmode="numeric" placeholder="Cth: 5000" oninput="formatRupiahUI(this)" style="font-size:clamp(0.9rem, 3.5vw, 1rem); padding:clamp(10px, 3vw, 12px);">
+                                    <p style="font-size:clamp(0.7rem, 2.5vw, 0.8rem); color:var(--warning); font-weight:800; margin-bottom:10px; line-height:1.4;">
+                                        Atur harga eceran custom! (Misal: Pampers 1 Bks, Ecerannya = Rp 3500 dapat 1 Pcs). Kosongkan jika tidak perlu.
+                                    </p>
+                                    
+                                    <div class="eceran-grid-row">
+                                        <div class="eceran-col-uang">
+                                            <label>Slot 1 (Rp)</label>
+                                            <input type="text" id="eceranNominal" inputmode="numeric" placeholder="Cth: 3500" oninput="formatRupiahUI(this)">
                                         </div>
-                                        <div style="flex:1;">
-                                            <label style="font-size:clamp(0.7rem, 2.5vw, 0.8rem);">Maka Dapat (Kg)</label>
-                                            <input type="text" id="eceranQty" inputmode="decimal" placeholder="Cth: 0.35" style="font-size:clamp(0.9rem, 3.5vw, 1rem); padding:clamp(10px, 3vw, 12px);">
+                                        <div class="eceran-col-qty">
+                                            <label>Dapat</label>
+                                            <input type="text" id="eceranQty" inputmode="decimal" placeholder="Cth: 1">
+                                        </div>
+                                        <div class="eceran-col-satuan">
+                                            <label>Satuan</label>
+                                            <input type="text" id="eceranUnit" placeholder="Cth: Pcs" style="text-transform: capitalize;">
                                         </div>
                                     </div>
-                                    <small style="color:#666; font-weight:bold; display:block; margin-top:5px; font-size:clamp(0.65rem, 2vw, 0.75rem);">*0.35 Kg = 3 Ons 5 Garis. Kosongkan jika tidak perlu.</small>
+
+                                    <div class="eceran-grid-row" style="border-bottom: none; padding-bottom: 0;">
+                                        <div class="eceran-col-uang">
+                                            <label>Slot 2 (Rp)</label>
+                                            <input type="text" id="eceranNominal2" inputmode="numeric" placeholder="Cth: 10000" oninput="formatRupiahUI(this)">
+                                        </div>
+                                        <div class="eceran-col-qty">
+                                            <label>Dapat</label>
+                                            <input type="text" id="eceranQty2" inputmode="decimal" placeholder="Cth: 3">
+                                        </div>
+                                        <div class="eceran-col-satuan">
+                                            <label>Satuan</label>
+                                            <input type="text" id="eceranUnit2" placeholder="Cth: Pcs" style="text-transform: capitalize;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -485,7 +537,6 @@
                 </div>
             </div>
         </div>
-
         <div class="panel">
             <h2 style="color: var(--success); border-bottom: 3px solid var(--success);">
                 <div class="title-wrap">
@@ -522,13 +573,13 @@
             <div id="scaleHelper" class="nominal-box">
                 <div class="nominal-title">
                     <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.45.62 2.84 1.5 3.5.76.76 1.23 1.52 1.41 2.5"></path></svg>
-                    <span>Beli Berdasarkan Uang Eceran</span>
+                    <span>Hitung Otomatis Berdasarkan Uang Pembeli</span>
                 </div>
                 <div class="scale-input-row">
                     <input type="text" id="nominalInput" inputmode="numeric" placeholder="Ketik uang (Rp)..." class="scale-input" oninput="formatRupiahUI(this); calculateScaleFromInput();">
                     <div class="scale-info">
-                        <span>Setara: <span class="badge-unit" style="background: yellow; color: var(--danger); font-size: clamp(1rem, 3.5vw, 1.1rem); padding: 2px 6px; width: auto;" id="scaleResultVal">0</span> <span id="scaleResultUnit">Kg</span></span>
-                        <span id="scaleResultDesc" style="color: var(--danger);">Timbangan: 0 Ons 0 Garis</span>
+                        <span>Otomatis Dapat: <span class="badge-unit" style="background: yellow; color: var(--danger); font-size: clamp(1rem, 3.5vw, 1.1rem); padding: 2px 6px; width: auto;" id="scaleResultVal">0</span> <span id="scaleResultUnit">Kg</span></span>
+                        <span id="scaleResultDesc" style="color: var(--danger); display: block;">Timbangan: 0 Ons 0 Garis</span>
                     </div>
                 </div>
             </div>
@@ -655,7 +706,7 @@
                 <div class="panel-content">
                     <div class="panel-inner">
                         
-                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #e8f4fd; padding: 10px; border-radius: 8px; border: 1px dashed var(--accent);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #e8f4fd; padding: 10px; border-radius: 8px; border: 1px dashed var(--accent);">
                             <span style="font-size: 0.85rem; font-weight: 900; color: var(--primary);">Pilih Waktu:</span>
                             <div class="custom-select" style="width: auto; padding: 8px 15px; font-size: 0.85rem; background: #fff; border-color: var(--accent); min-width: 140px; justify-content: space-between; border-width: 2px;" onclick="document.getElementById('filterTimeModal').classList.add('active'); playTick();">
                                 <span id="historyFilterText">Hari Ini</span>
@@ -710,7 +761,7 @@
     // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.12 CLOUD-SYNC"; 
+    const APP_VERSION = "4.13 SMART-CART & CLEAN-TOAST"; 
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -883,7 +934,10 @@
     function bootApp() {
         updateMuteUI();
         document.getElementById('shopNameDisplay').innerText = shopName;
-        if(units.length > 0) { document.getElementById('itemUnitVal').value = units[0]; document.getElementById('itemUnitText').innerText = units[0]; }
+        if(units.length > 0) { 
+            document.getElementById('itemUnitVal').value = units[0]; 
+            document.getElementById('itemUnitText').innerText = units[0]; 
+        }
         
         const netStatus = document.getElementById('networkStatus');
         if (APP_MODE === 'CLOUD') {
@@ -977,6 +1031,7 @@
         if (sbClient) { try { await sbClient.auth.signOut(); } catch (err) {} }
         setTimeout(() => { window.location.reload(); }, 800);
     }
+    
     // LISTENER SINYAL OTOMATIS
     window.addEventListener('online', () => { 
         const netStatus = document.getElementById('networkStatus');
@@ -1076,11 +1131,133 @@
     function customAlert(title, message) { document.getElementById('alertTitle').innerText = title; document.getElementById('alertMsg').innerText = message; document.getElementById('customAlert').classList.add('active'); }
     function customConfirm(title, message, actionCallback) { document.getElementById('confirmTitle').innerText = title; document.getElementById('confirmMsg').innerText = message; document.getElementById('customConfirm').classList.add('active'); const btnYes = document.getElementById('confirmBtnYes'); const newBtnYes = btnYes.cloneNode(true); btnYes.parentNode.replaceChild(newBtnYes, btnYes); newBtnYes.addEventListener('click', () => { closeModal('customConfirm'); if(actionCallback) actionCallback(); }); }
     function customPrompt(title, message, defaultVal, actionCallback) { document.getElementById('promptTitle').innerText = title; document.getElementById('promptMsg').innerText = message; const input = document.getElementById('promptInput'); input.value = defaultVal || ''; document.getElementById('customPrompt').classList.add('active'); setTimeout(() => input.focus(), 100); const btnSave = document.getElementById('promptBtnSave'); const newBtnSave = btnSave.cloneNode(true); btnSave.parentNode.replaceChild(newBtnSave, btnSave); newBtnSave.addEventListener('click', () => { let val = document.getElementById('promptInput').value.trim(); closeModal('customPrompt'); if(actionCallback && val) actionCallback(val); }); }
-    function showToast(msg, type = 'success') { const box = document.getElementById('toastBox'); const t = document.createElement('div'); t.className = `toast ${type}`; t.innerText = msg; box.appendChild(t); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000); }
+    
+    // FIX UPGRADE: Sistem Toast Cerdas (Strict 1 Toast, tidak menimpa berlapis-lapis)
+    let currentToastTimeout;
+    function showToast(msg, type = 'success') { 
+        const box = document.getElementById('toastBox'); 
+        box.innerHTML = ''; // Hapus toast sebelumnya secara paksa
+        if (currentToastTimeout) clearTimeout(currentToastTimeout); // Reset timer animasi
+
+        const t = document.createElement('div'); 
+        t.className = `toast ${type}`; 
+        t.innerText = msg; 
+        box.appendChild(t); 
+        
+        setTimeout(() => t.classList.add('show'), 10); 
+        currentToastTimeout = setTimeout(() => { 
+            t.classList.remove('show'); 
+            setTimeout(() => t.remove(), 300); 
+        }, 2000); 
+    }
+
+
+    // ==========================================
+    // LOGIKA BARU: EXPORT & IMPORT CSV (10 Kolom)
+    // ==========================================
+
+    function triggerDownloadCSV() {
+        playTick();
+        if (inventory.length === 0) return customAlert("Gagal", "Database barang masih kosong!");
+        
+        const fileName = `Data_Barang_Kasir_${new Date().getTime()}.csv`;
+        customConfirm(
+            "Unduh file .csv ini?", 
+            fileName, 
+            () => exportToCSV(fileName)
+        );
+    }
+
+    function exportToCSV(fileName) {
+        let csvContent = "ID,NamaBarang,Harga,Satuan,EceranNominal1,EceranQty1,EceranUnit1,EceranNominal2,EceranQty2,EceranUnit2\n";
+        inventory.forEach(item => {
+            let nameClean = item.name.replace(/,/g, ' '); 
+            csvContent += `${item.id},${nameClean},${item.price},${item.unit},${item.eceranNominal || ""},${item.eceranQty || ""},${item.eceranUnit || ""},${item.eceranNominal2 || ""},${item.eceranQty2 || ""},${item.eceranUnit2 || ""}\n`;
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+        showToast("Berhasil Download Database (CSV)!");
+    }
+
+    function triggerCSVUpload() {
+        playTick();
+        document.getElementById('csvUploader').value = ""; 
+        document.getElementById('csvUploader').click();
+    }
+
+    document.getElementById('csvUploader').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            
+            const processCSV = () => {
+                const textData = evt.target.result;
+                const rows = textData.split('\n');
+                let newInv = [];
+                
+                for (let i = 1; i < rows.length; i++) {
+                    if (!rows[i].trim()) continue;
+                    let cols = rows[i].split(',');
+                    if (cols.length >= 4) {
+                        newInv.push({
+                            id: cols[0] ? parseInt(cols[0]) : Date.now() + i,
+                            name: cols[1] ? cols[1].trim() : "Tanpa Nama",
+                            price: parseFloat(cols[2]) || 0,
+                            unit: cols[3] ? cols[3].trim() : "Pcs",
+                            eceranNominal: cols[4] ? parseFloat(cols[4]) : null,
+                            eceranQty: cols[5] ? parseFloat(cols[5]) : null,
+                            eceranUnit: cols[6] ? cols[6].trim() : null,
+                            eceranNominal2: cols[7] ? parseFloat(cols[7]) : null,
+                            eceranQty2: cols[8] ? parseFloat(cols[8]) : null,
+                            eceranUnit2: cols[9] ? cols[9].trim() : null
+                        });
+                    }
+                }
+                
+                if (newInv.length > 0) {
+                    inventory = newInv; 
+                    saveDB(); 
+                    renderInventory();
+                    showToast("Data Barang CSV Berhasil Di-upload!");
+                } else {
+                    customAlert("Gagal Import", "Format file CSV kosong, tidak terbaca, atau salah format.");
+                }
+            };
+
+            if (inventory.length > 0) {
+                customConfirm(
+                    "Timpa Data Barang?", 
+                    "Database HP ini sudah ada isinya. Jika Upload CSV, data barang saat ini akan DITIMPA (hilang). Apakah Anda yakin?", 
+                    processCSV
+                );
+            } else {
+                processCSV();
+            }
+        };
+        reader.readAsText(file);
+    });
 
     // --- MANAJEMEN SATUAN & BARANG ---
     function openUnitSelectModal() { document.getElementById('unitSelectContainer').innerHTML = units.map(u => `<div class="unit-option-btn" onclick="selectUnitOption('${u}')">${u}</div>`).join(''); document.getElementById('unitSelectModal').classList.add('active'); }
-    function selectUnitOption(selectedUnit) { document.getElementById('itemUnitVal').value = selectedUnit; document.getElementById('itemUnitText').innerText = selectedUnit; closeModal('unitSelectModal'); }
+    
+    function selectUnitOption(selectedUnit) { 
+        document.getElementById('itemUnitVal').value = selectedUnit; 
+        document.getElementById('itemUnitText').innerText = selectedUnit; 
+        
+        let lblQty1 = document.getElementById('lblEceranQty');
+        if (lblQty1) lblQty1.innerText = `Dapat (${selectedUnit})`;
+        
+        let lblQty2 = document.getElementById('lblEceranQty2');
+        if (lblQty2) lblQty2.innerText = `Dapat (${selectedUnit})`;
+        
+        closeModal('unitSelectModal'); 
+    }
 
     function addUnit() { const u = document.getElementById('unitName').value.trim(); if(!u) return; if(units.some(unit => unit.toLowerCase() === u.toLowerCase())) return customAlert("Gagal", "Satuan sudah ada!"); units.push(u); localStorage.setItem('pos_units', JSON.stringify(units)); renderUnits(); document.getElementById('unitName').value = ''; showToast("Satuan ditambahkan"); }
     function deleteUnit(unitName) { units = units.filter(u => u !== unitName); localStorage.setItem('pos_units', JSON.stringify(units)); renderUnits(); if(document.getElementById('itemUnitVal').value === unitName) { document.getElementById('itemUnitVal').value = units[0] || ''; document.getElementById('itemUnitText').innerText = units[0] || 'PILIH'; } showToast("Satuan dihapus"); }
@@ -1088,23 +1265,38 @@
 
     function addInventory() {
         const name = document.getElementById('itemName').value.trim(); const price = parseRp(document.getElementById('itemPrice').value); const unit = document.getElementById('itemUnitVal').value; 
-        const eNominal = parseRp(document.getElementById('eceranNominal').value); const eQty = parseFloat(document.getElementById('eceranQty').value);
+        const eNominal1 = parseRp(document.getElementById('eceranNominal').value); const eQty1 = parseFloat(document.getElementById('eceranQty').value); const eUnit1 = document.getElementById('eceranUnit').value.trim();
+        const eNominal2 = parseRp(document.getElementById('eceranNominal2').value); const eQty2 = parseFloat(document.getElementById('eceranQty2').value); const eUnit2 = document.getElementById('eceranUnit2').value.trim();
+        
         if (!name || price <= 0) return customAlert("Error", "Nama dan Harga wajib diisi!");
         const existingItem = inventory.find(x => x.name.toLowerCase() === name.toLowerCase());
-        let newItemData = { id: Date.now(), name: name, price: price, unit: unit, eceranNominal: eNominal > 0 ? eNominal : null, eceranQty: eQty > 0 ? eQty : null };
+        
+        let newItemData = { 
+            id: Date.now(), name: name, price: price, unit: unit, 
+            eceranNominal: eNominal1 > 0 ? eNominal1 : null, eceranQty: eQty1 > 0 ? eQty1 : null, eceranUnit: eUnit1 || null,
+            eceranNominal2: eNominal2 > 0 ? eNominal2 : null, eceranQty2: eQty2 > 0 ? eQty2 : null, eceranUnit2: eUnit2 || null
+        };
 
         if(existingItem) { 
-            existingItem.price = price; existingItem.unit = unit; existingItem.eceranNominal = newItemData.eceranNominal; existingItem.eceranQty = newItemData.eceranQty;
+            existingItem.price = price; existingItem.unit = unit; 
+            existingItem.eceranNominal = newItemData.eceranNominal; existingItem.eceranQty = newItemData.eceranQty; existingItem.eceranUnit = newItemData.eceranUnit;
+            existingItem.eceranNominal2 = newItemData.eceranNominal2; existingItem.eceranQty2 = newItemData.eceranQty2; existingItem.eceranUnit2 = newItemData.eceranUnit2;
             showToast(`Barang ${existingItem.name} di-update!`); 
         } else { inventory.push(newItemData); showToast("Barang baru disimpan!"); }
         
-        saveDB(); renderInventory(); document.getElementById('itemName').value = ''; document.getElementById('itemPrice').value = ''; document.getElementById('eceranNominal').value = ''; document.getElementById('eceranQty').value = '';
+        saveDB(); renderInventory(); 
+        document.getElementById('itemName').value = ''; document.getElementById('itemPrice').value = ''; 
+        document.getElementById('eceranNominal').value = ''; document.getElementById('eceranQty').value = ''; document.getElementById('eceranUnit').value = '';
+        document.getElementById('eceranNominal2').value = ''; document.getElementById('eceranQty2').value = ''; document.getElementById('eceranUnit2').value = '';
     }
 
     function renderInventory() {
         const q = document.getElementById('searchInventoryInput').value.toLowerCase(); const list = inventory.filter(x => x.name.toLowerCase().includes(q));
         document.getElementById('inventoryList').innerHTML = list.map(i => {
-            let eceranBadge = (i.eceranNominal && i.eceranQty) ? `<br><span style="color:var(--warning); font-size:0.75rem; font-weight:800;">(Patokan: Rp${formatRp(i.eceranNominal)} = ${i.eceranQty}${i.unit})</span>` : '';
+            let eceranBadge = '';
+            if (i.eceranNominal && i.eceranQty) eceranBadge += `<br><span style="color:var(--warning); font-size:0.75rem; font-weight:800;">(Slot 1: Rp${formatRp(i.eceranNominal)} = ${i.eceranQty} ${i.eceranUnit || i.unit})</span>`;
+            if (i.eceranNominal2 && i.eceranQty2) eceranBadge += `<br><span style="color:var(--accent); font-size:0.75rem; font-weight:800;">(Slot 2: Rp${formatRp(i.eceranNominal2)} = ${i.eceranQty2} ${i.eceranUnit2 || i.unit})</span>`;
+            
             return `<tr>
                 <td><b style="font-size:clamp(0.95rem, 3.5vw, 1.1rem); text-transform: capitalize;">${i.name}</b>${eceranBadge}</td>
                 <td style="font-weight:700;">Rp ${formatRp(i.price)}</td>
@@ -1140,27 +1332,55 @@
 
     function selectItem(name, price, unit) {
         document.getElementById('searchInput').value = name; document.getElementById('selectedItemName').value = name; document.getElementById('selectedItemPrice').value = price; document.getElementById('selectedItemUnit').value = unit; searchResults.style.display = 'none';
-        document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = unit; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; nominalInput.value = ''; nominalInput.focus(); playTick();
+        document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = unit; 
+        
+        const scaleDesc = document.getElementById('scaleResultDesc');
+        if (unit.toLowerCase() !== 'kg') { scaleDesc.style.display = 'none'; } else { scaleDesc.style.display = 'block'; scaleDesc.innerText = `Timbangan: 0 Ons 0 Garis`; }
+        nominalInput.value = ''; nominalInput.focus(); playTick();
     }
 
-    function resetSelection() { document.getElementById('selectedItemName').value = ''; document.getElementById('selectedItemPrice').value = ''; document.getElementById('selectedItemUnit').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('searchInput').value = ''; document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = 'Kg'; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; nominalInput.value = ''; }
+    function resetSelection() { 
+        document.getElementById('selectedItemName').value = ''; document.getElementById('selectedItemPrice').value = ''; document.getElementById('selectedItemUnit').value = ''; document.getElementById('itemQty').value = '1'; document.getElementById('searchInput').value = ''; document.getElementById('scaleResultVal').innerText = `0`; document.getElementById('scaleResultUnit').innerText = 'Kg'; 
+        document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; document.getElementById('scaleResultDesc').style.display = 'block';
+        nominalInput.value = ''; 
+    }
 
     function calculateScaleFromInput() {
         const nominal = parseRp(nominalInput.value); const pricePerUnit = parseFloat(document.getElementById('selectedItemPrice').value) || 0; const unit = document.getElementById('selectedItemUnit').value;
         const selectedItemName = document.getElementById('selectedItemName').value;
+        const scaleDesc = document.getElementById('scaleResultDesc');
         
-        if (pricePerUnit <= 0 || nominal <= 0) { document.getElementById('itemQty').value = '1'; document.getElementById('scaleResultVal').innerText = '0'; document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`; return; }
+        if (pricePerUnit <= 0 || nominal <= 0) { 
+            document.getElementById('itemQty').value = '1'; document.getElementById('scaleResultVal').innerText = '0'; document.getElementById('scaleResultUnit').innerText = unit;
+            if(unit.toLowerCase() === 'kg') { scaleDesc.style.display = 'block'; scaleDesc.innerText = `Timbangan: 0 Ons 0 Garis`; } else { scaleDesc.style.display = 'none'; }
+            return; 
+        }
         
         const itemData = inventory.find(i => i.name === selectedItemName);
-        if (itemData && itemData.eceranNominal && itemData.eceranQty) {
-            if (nominal === itemData.eceranNominal) {
-                document.getElementById('itemQty').value = itemData.eceranQty; document.getElementById('scaleResultVal').innerText = itemData.eceranQty; document.getElementById('scaleResultUnit').innerText = unit;
-                const totalG = itemData.eceranQty * 1000; const o = Math.floor(totalG / 100); const g = Math.round((totalG % 100) / 10);
-                document.getElementById('scaleResultDesc').innerHTML = `Timbangan: ${o} Ons ${g} Garis <b style="color:var(--warning);">(Patokan Pas)</b>`; return;
+        if (itemData) {
+            // Cek Slot 2 dulu (Misal: Pembelian Besar/Grosir)
+            if (itemData.eceranNominal2 && itemData.eceranQty2 && nominal === itemData.eceranNominal2) {
+                document.getElementById('itemQty').value = itemData.eceranQty2; document.getElementById('scaleResultVal').innerText = itemData.eceranQty2; 
+                document.getElementById('scaleResultUnit').innerText = itemData.eceranUnit2 || unit; 
+                scaleDesc.style.display = 'block'; scaleDesc.innerHTML = `<b style="color:var(--accent);">(Otomatis Paket Slot 2 Pas!)</b>`; return;
+            }
+            // Cek Slot 1 (Misal: Eceran Biasa)
+            if (itemData.eceranNominal && itemData.eceranQty && nominal === itemData.eceranNominal) {
+                document.getElementById('itemQty').value = itemData.eceranQty; document.getElementById('scaleResultVal').innerText = itemData.eceranQty; 
+                document.getElementById('scaleResultUnit').innerText = itemData.eceranUnit || unit; 
+                scaleDesc.style.display = 'block'; scaleDesc.innerHTML = `<b style="color:var(--warning);">(Otomatis Paket Slot 1 Pas!)</b>`; return;
             }
         }
 
-        if (unit.toLowerCase() !== 'kg') { const qty = nominal / pricePerUnit; document.getElementById('itemQty').value = qty.toFixed(2); document.getElementById('scaleResultVal').innerText = qty.toFixed(2); document.getElementById('scaleResultUnit').innerText = unit; document.getElementById('scaleResultDesc').innerText = `Satuan Non-Timbangan`; return; }
+        document.getElementById('scaleResultUnit').innerText = unit;
+
+        if (unit.toLowerCase() !== 'kg') { 
+            const qty = nominal / pricePerUnit; 
+            document.getElementById('itemQty').value = parseFloat(qty.toFixed(3)); 
+            document.getElementById('scaleResultVal').innerText = parseFloat(qty.toFixed(3)); 
+            scaleDesc.style.display = 'none'; 
+            return; 
+        }
         
         const qtyKg = nominal / pricePerUnit; const totalGrams = qtyKg * 1000; 
         let ons = Math.floor(totalGrams / 100); let rawGaris = (totalGrams % 100) / 10; let garis = 0;
@@ -1170,7 +1390,56 @@
         else { let frac = rawGaris - Math.floor(rawGaris); if (frac <= 0.5) { garis = Math.floor(rawGaris); } else { garis = Math.ceil(rawGaris); } }
 
         const finalKg = (ons * 100 + garis * 10) / 1000;
-        document.getElementById('itemQty').value = finalKg.toFixed(3); document.getElementById('scaleResultVal').innerText = finalKg.toFixed(3); document.getElementById('scaleResultUnit').innerText = 'Kg'; document.getElementById('scaleResultDesc').innerText = `Timbangan: ${ons} Ons ${garis} Garis`;
+        document.getElementById('itemQty').value = finalKg.toFixed(3); document.getElementById('scaleResultVal').innerText = finalKg.toFixed(3); 
+        scaleDesc.style.display = 'block'; scaleDesc.innerText = `Timbangan: ${ons} Ons ${garis} Garis`;
+    }
+
+    // --- ALGORITMA KERANJANG CERDAS (Deteksi Grosir Otomatis) ---
+    function calculateSmartSubtotal(itemName, activeUnit, totalQty) {
+        const dbItem = inventory.find(x => x.name === itemName);
+        if (!dbItem) return 0;
+
+        let tiers = [];
+        
+        // 1. Patokan Harga Dasar
+        if (dbItem.unit === activeUnit) tiers.push({ qty: 1, price: dbItem.price });
+        
+        // 2. Patokan Slot 1 (Eceran Biasa)
+        let u1 = dbItem.eceranUnit || dbItem.unit;
+        if (dbItem.eceranQty && dbItem.eceranNominal && u1 === activeUnit) {
+            tiers.push({ qty: dbItem.eceranQty, price: dbItem.eceranNominal });
+        }
+        
+        // 3. Patokan Slot 2 (Grosir)
+        let u2 = dbItem.eceranUnit2 || dbItem.unit;
+        if (dbItem.eceranQty2 && dbItem.eceranNominal2 && u2 === activeUnit) {
+            tiers.push({ qty: dbItem.eceranQty2, price: dbItem.eceranNominal2 });
+        }
+
+        // Urutkan tier dari Jumlah (Qty) terbesar ke terkecil
+        tiers.sort((a, b) => b.qty - a.qty);
+
+        // Jika satuan tidak dikenali di database, gunakan harga dasar
+        if (tiers.length === 0) return totalQty * dbItem.price;
+
+        let sisaQty = totalQty;
+        let totalHarga = 0;
+
+        for (let t of tiers) {
+            if (sisaQty >= t.qty) {
+                let jumlahPaket = Math.floor(sisaQty / t.qty);
+                totalHarga += jumlahPaket * t.price;
+                sisaQty = parseFloat((sisaQty % t.qty).toFixed(3));
+            }
+        }
+
+        // Jika masih ada sisa (misal beli 4, sisa 1 dari patokan 3), kalikan secara proporsional dengan tier terkecil
+        if (sisaQty > 0) {
+            let tierTerkecil = tiers[tiers.length - 1];
+            totalHarga += sisaQty * (tierTerkecil.price / tierTerkecil.qty);
+        }
+
+        return Math.round(totalHarga);
     }
 
     // --- KALKULATOR & KERANJANG ---
@@ -1181,19 +1450,36 @@
         const display = document.getElementById('calcDisplay');
         if (action === 'C') calcRaw = '0'; else if (action === 'DEL') calcRaw = calcRaw.length > 1 ? calcRaw.slice(0, -1) : '0';
         else if (action === '=') { try { let res = eval(calcRaw); calcRaw = Number.isInteger(res) ? res.toString() : res.toFixed(2).toString(); } catch { calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); } } 
-        else if (action === '+') { try { let res = eval(calcRaw); if (res > 0) { cart.push({ id: Date.now(), name: `Barang Manual ${manualItemCounter}`, price: res, qty: 1, unit: 'Ls', subtotal: res, isManual: true }); manualItemCounter++; renderCart(); showToast(`Masuk Keranjang: Rp ${formatRp(res)}`); } calcRaw = '0'; } catch { calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); } } 
+        else if (action === '+') { try { let res = eval(calcRaw); if (res > 0) { cart.push({ id: Date.now(), name: `Barang Manual ${manualItemCounter}`, price: res, qty: 1, unit: 'Ls', subtotal: res, isManual: true }); manualItemCounter++; renderCart(); showToast(`Masuk Keranjang!`); } calcRaw = '0'; } catch { calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); } } 
         else { let sysAction = action; if (action === 'X') sysAction = '*'; if (action === ':') sysAction = '/'; if (calcRaw === '0') { if (['00', '000'].includes(sysAction)) return; if (sysAction === '.') calcRaw = '0.'; else if (['*', '/', '-'].includes(sysAction)) calcRaw = '0' + sysAction; else calcRaw = sysAction; } else calcRaw += sysAction; }
         if(calcRaw !== 'Err') display.innerText = formatCalcDisplay(calcRaw); else display.innerText = calcRaw;
     }
 
     function addToCart() {
-        let name = document.getElementById('selectedItemName').value; let price = parseFloat(document.getElementById('selectedItemPrice').value); let unit = document.getElementById('selectedItemUnit').value; let qtyInput = parseFloat(document.getElementById('itemQty').value); let nominalInputVal = parseRp(document.getElementById('nominalInput').value);
-        if (name && price > 0) {
-            let existingItem = cart.find(x => x.name === name && !x.isManual);
-            if (nominalInputVal > 0) { if (existingItem) { existingItem.subtotal += nominalInputVal; existingItem.qty = existingItem.subtotal / existingItem.price; showToast(`Jumlah uang ditambahkan!`); } else { cart.push({ id: Date.now(), name: name, price: price, qty: nominalInputVal / price, unit: unit, subtotal: nominalInputVal, isManual: false }); showToast(`Masuk keranjang!`); } } 
-            else { if (existingItem) { existingItem.qty += qtyInput; existingItem.subtotal = existingItem.qty * existingItem.price; showToast(`Jumlah digabung!`); } else { cart.push({ id: Date.now(), name: name, price: price, qty: qtyInput, unit: unit, subtotal: price * qtyInput, isManual: false }); showToast(`Masuk keranjang!`); } }
+        let name = document.getElementById('selectedItemName').value; 
+        let basePrice = parseFloat(document.getElementById('selectedItemPrice').value); 
+        let activeUnit = document.getElementById('scaleResultUnit').innerText; 
+        let activeQty = parseFloat(document.getElementById('itemQty').value); 
+        let nominalInputVal = parseRp(document.getElementById('nominalInput').value);
+        
+        if (name && basePrice > 0) {
+            let existingItem = cart.find(x => x.name === name && !x.isManual && x.unit === activeUnit);
+            
+            if (existingItem) {
+                existingItem.qty += activeQty;
+                // Hitung ulang harga total dengan logika pintar
+                existingItem.subtotal = calculateSmartSubtotal(existingItem.name, existingItem.unit, existingItem.qty);
+                showToast(`Jumlah digabung & Harga dikalkulasi ulang!`);
+            } else {
+                let smartSub = calculateSmartSubtotal(name, activeUnit, activeQty);
+                let finalSubtotal = nominalInputVal > 0 ? nominalInputVal : smartSub;
+                
+                cart.push({ id: Date.now(), name: name, price: basePrice, qty: activeQty, unit: activeUnit, subtotal: finalSubtotal, isManual: false });
+                showToast(`Masuk keranjang!`);
+            }
             resetSelection(); renderCart(); return;
-        } customAlert("Gagal", "Pilih barang dari pencarian atau tekan (+) di Kalkulator untuk barang manual!");
+        }
+        customAlert("Gagal", "Pilih barang dari pencarian atau tekan (+) di Kalkulator untuk barang manual!");
     }
 
     function renderCart() {
@@ -1201,15 +1487,44 @@
         document.getElementById('cartList').innerHTML = cart.map(i => {
             total += i.subtotal; let qtyHtml = ''; let priceHtml = '';
             if (i.isManual) { qtyHtml = `<div style="text-align:center; font-weight:bold;">1 Ls</div>`; priceHtml = `<span style="font-weight:900; color:var(--primary); cursor:pointer; text-decoration:underline;" onclick="editManualPrice(${i.id}, ${i.price})">Rp ${formatRp(i.subtotal)}</span>`; } 
-            else { qtyHtml = `<div class="qty-updater"><button class="btn-qty" onclick="updateCartQty(${i.id}, -1)">-</button><div class="cart-qty-val" onclick="openCartQtyModal(${i.id}, '${i.name.replace(/'/g, "\\'")}', '${i.unit}', ${i.qty})">${parseFloat(i.qty.toFixed(3))}</div><button class="btn-qty" onclick="updateCartQty(${i.id}, 1)">+</button></div>`; priceHtml = `<span style="font-weight:900; color:var(--primary);">Rp ${formatRp(i.subtotal)}</span>`; }
+            else { qtyHtml = `<div class="qty-updater"><button class="btn-qty" onclick="updateCartQty(${i.id}, -1)">-</button><div class="cart-qty-val" onclick="openCartQtyModal(${i.id}, '${i.name.replace(/'/g, "\\'")}', '${i.unit}', ${i.qty})">${parseFloat(i.qty.toFixed(3))}<br><small style="font-size:0.65rem;">${i.unit}</small></div><button class="btn-qty" onclick="updateCartQty(${i.id}, 1)">+</button></div>`; priceHtml = `<span style="font-weight:900; color:var(--primary);">Rp ${formatRp(i.subtotal)}</span>`; }
             return `<tr><td><b style="font-size:clamp(0.95rem, 3.5vw, 1.1rem); text-transform: capitalize;">${i.name}</b></td><td>${qtyHtml}</td><td>${priceHtml}</td><td><button class="btn-danger btn-table" style="margin: 0 auto !important;" onclick="customConfirm('Batal Beli?', 'Hapus ${i.name}?', () => removeFromCart(${i.id}))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></td></tr>`;
         }).join('');
         total = Math.round(total); document.getElementById('grandTotal').innerText = `Rp ${formatRp(total)}`; document.getElementById('grandTotal').dataset.val = total; calculateChange();
     }
 
-    function updateCartQty(id, delta) { playTick(); let item = cart.find(x => x.id === id); if (item && !item.isManual) { let newQty = item.qty + delta; if (newQty <= 0) customConfirm('Hapus Barang?', 'Jumlah 0. Hapus?', () => removeFromCart(id)); else { item.qty = newQty; item.subtotal = item.price * item.qty; renderCart(); } } }
+    function updateCartQty(id, delta) { 
+        playTick(); 
+        let item = cart.find(x => x.id === id); 
+        if (item && !item.isManual) { 
+            let newQty = item.qty + delta; 
+            if (newQty <= 0) {
+                customConfirm('Hapus Barang?', 'Jumlah 0. Hapus?', () => removeFromCart(id)); 
+            } else { 
+                item.qty = newQty; 
+                // Lock harga Grosir/Eceran jika memenuhi syarat
+                item.subtotal = calculateSmartSubtotal(item.name, item.unit, item.qty);
+                renderCart(); 
+            } 
+        } 
+    }
+    
     function openCartQtyModal(id, name, unit, currentQty) { document.getElementById('cartQtyId').value = id; document.getElementById('cartQtyMsg').innerText = `Kuantitas ${name} (${unit})`; const input = document.getElementById('cartQtyInput'); input.value = parseFloat(currentQty.toFixed(3)); document.getElementById('cartQtyModal').classList.add('active'); setTimeout(() => input.focus(), 100); }
-    function saveCartQty() { let id = parseFloat(document.getElementById('cartQtyId').value); let newQty = parseFloat(document.getElementById('cartQtyInput').value); if (newQty > 0) { let item = cart.find(x => x.id === id); if (item) { item.qty = newQty; item.subtotal = item.price * newQty; renderCart(); } } closeModal('cartQtyModal'); }
+    
+    function saveCartQty() { 
+        let id = parseFloat(document.getElementById('cartQtyId').value); 
+        let newQty = parseFloat(document.getElementById('cartQtyInput').value); 
+        if (newQty > 0) { 
+            let item = cart.find(x => x.id === id); 
+            if (item) { 
+                item.qty = newQty; 
+                item.subtotal = calculateSmartSubtotal(item.name, item.unit, item.qty);
+                renderCart(); 
+            } 
+        } 
+        closeModal('cartQtyModal'); 
+    }
+
     function editManualPrice(id, currentPrice) { customPrompt('Edit Barang Manual', 'Masukkan harga baru:', formatRp(currentPrice), (newVal) => { const newPrice = parseRp(newVal); if (newPrice > 0) { let item = cart.find(x => x.id === id); if (item && item.isManual) { item.price = newPrice; item.subtotal = newPrice; renderCart(); showToast("Harga diubah!"); } } }); }
     function removeFromCart(id) { cart = cart.filter(x => x.id !== id); renderCart(); }
 
@@ -1280,11 +1595,7 @@
 
     function toggleHistoryDetail(id, btn, count) { const detailDiv = document.getElementById('hist-detail-' + id); if(detailDiv.classList.contains('active')) { detailDiv.classList.remove('active'); btn.innerText = `Lihat ${count} ..`; } else { detailDiv.classList.add('active'); btn.innerText = `Tutup Detail [-]`; } }
 
-
-        // ==========================================
-    // LOGIKA BARU: FILTER WAKTU & HAPUS PINTAR
-    // ==========================================
-    
+    // --- RIWAYAT PINTAR & FILTER WAKTU ---
     function selectHistoryFilter(val, textLabel) {
         document.getElementById('historyFilterVal').value = val;
         document.getElementById('historyFilterText').innerText = textLabel;
@@ -1359,7 +1670,7 @@
             else if (filterVal === '7days') cutoffTime = startOfToday - (6 * 24 * 60 * 60 * 1000);
             historyLog = historyLog.filter(h => h.id < cutoffTime);
         }
-                saveDB(); renderHistory(); showToast("Riwayat berhasil dibersihkan!"); 
+        saveDB(); renderHistory(); showToast("Riwayat berhasil dibersihkan!"); 
     }
 
     function requestShopNameEdit() { 
@@ -1372,7 +1683,7 @@
         }); 
     }
 
-    // RENDER SEMUA UI
+    // RENDER SEMUA UI SAAT AWAL MUAT
     function renderAllUI() { renderUnits(); renderInventory(); renderDebts(); renderHistory(); }
 
     // --- EKSEKUSI AWAL ---
@@ -1407,5 +1718,6 @@
         });
     }
 </script>
+
 </body>
 </html>
