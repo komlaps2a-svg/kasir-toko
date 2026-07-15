@@ -1,792 +1,1182 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <!-- Primary Meta Tags -->
-    <title>KKNKU - Sekretariat Pro</title>
-    <meta name="title" content="KKNKU - Sekretariat Pro">
-    <meta name="description" content="Dashboard Sekretariat Pro untuk Mahasiswa KKN. Kelola arsip, delegasi tugas, timeline kegiatan, dan persuratan otomatis dalam satu aplikasi PWA.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Kasir Daeng - V2.8</title>
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kknku.app/">
-    <meta property="og:title" content="KKNKU - Sekretariat Pro">
-    <meta property="og:description" content="Aplikasi Sekretariat Mahasiswa KKN Cerdas. Integrasi notulensi, persuratan otomatis, dan penjadwalan.">
-    <meta property="og:image" content="https://kknku.app/icon.png">
-    <meta property="og:site_name" content="KKNKU">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://kknku.app/">
-    <meta property="twitter:title" content="KKNKU - Sekretariat Pro">
-    <meta property="twitter:description" content="Aplikasi Sekretariat Mahasiswa KKN Cerdas. Integrasi notulensi, persuratan otomatis, dan penjadwalan.">
-    <meta property="twitter:image" content="https://kknku.app/icon.png">
-    
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a252f">
+    <link rel="apple-touch-icon" href="icon-192.png">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
-        }
-    </script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase & Crypto -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        :root {
+            --bg: #f4f6f9; --surface: #ffffff; --primary: #1a252f; 
+            --accent: #3498db; --success: #2ecc71; --danger: #e74c3c; 
+            --warning: #f39c12; --text: #2c3e50; --border: #dcdde1;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #000; }
-        .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 12px); }
-        .pt-safe { padding-top: max(env(safe-area-inset-top), 0px); }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { background-color: var(--bg); color: var(--text); padding: 10px; display: grid; grid-template-columns: 1fr; gap: 15px; max-width: 600px; margin: 0 auto; overscroll-behavior-y: none; }
+        .panel { background: var(--surface); padding: 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03); }
         
-        @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
-        @keyframes zoomIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+        h2 { margin-bottom: 12px; color: var(--primary); font-size: 1.15rem; border-bottom: 2px solid var(--border); padding-bottom: 8px; text-transform: uppercase; font-weight: 900; display: flex; align-items: center; justify-content: space-between; }
         
-        .animate-in { animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .animate-zoom { animation: zoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .animate-fade { animation: fadeIn 0.2s ease-out forwards; }
+        .header-toggle { cursor: pointer; user-select: none; }
+        .panel-wrapper { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.3s ease; }
+        .panel-wrapper.collapsed { grid-template-rows: 0fr; }
+        .panel-content { min-height: 0; overflow: hidden; }
+        .panel-inner { padding-top: 10px; padding-bottom: 10px; }
+
+        /* Input & Forms */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 800; font-size: 0.95rem; color: #444; }
+        input, .custom-select { width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 8px; font-size: 1.2rem; font-weight: 700; color: #111; transition: all 0.2s ease; background: #fafafa; outline: none; }
+        input:focus { border-color: var(--success); background: #fff; box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.15); }
         
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
-        .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        /* Custom Select (Pengganti tag select bawaan hp) */
+        .custom-select { cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; text-transform: uppercase; }
+        .custom-select:active { background: #e8f8f5; border-color: var(--success); }
+
+        /* Buttons */
+        button { border: none; padding: 16px; border-radius: 8px; cursor: pointer; font-weight: 900; width: 100%; transition: transform 0.1s; font-size: 1.15rem; text-transform: uppercase; user-select: none; }
+        button:active { transform: scale(0.96); }
+        button.btn-primary { background: var(--primary); color: white; }
+        button.btn-success { background: var(--success); color: white; box-shadow: 0 4px 0 #27ae60; }
+        button.btn-danger { background: var(--danger); color: white; }
+        button.btn-thumb { min-height: 50px; display: flex; align-items: center; justify-content: center; padding: 12px; font-size: 1rem; }
+        .btn-edit-small { background: var(--accent); color: white; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; display: inline-block; width: auto; }
+        .unit-option-btn { background: var(--border); color: var(--primary); padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 900; text-align: center; cursor: pointer; text-transform: uppercase; }
+        .unit-option-btn:active { background: var(--accent); color: white; }
+
+        /* Banner & Profile */
+        .shop-banner { background: var(--success); color: #ffffff; border: 3px solid #111; padding: 25px 15px; border-radius: 10px; box-shadow: 4px 4px 0px #111; margin-bottom: 15px; text-align: center; font-size: 2.2rem; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
+        .user-profile { font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e1f0fa; padding: 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--accent); margin-bottom: 12px; }
+        
+        /* Satuan Tags */
+        .unit-tag { background: var(--primary); color: white; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .unit-tag span { cursor: pointer; color: #ff7675; font-weight: 900; padding: 0 4px; }
+
+        /* Auto-correct & Dropdown (Blok Hijau) */
+        .search-container { position: relative; }
+        .autocomplete-wrapper { position: relative; display: flex; align-items: center; background: transparent; }
+        .autocomplete-wrapper input { position: relative; z-index: 2; background: transparent; width: 100%; }
+        
+        #searchResults { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 2px solid var(--success); border-radius: 8px; max-height: 250px; overflow-y: auto; display: none; z-index: 20; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .search-item { padding: 15px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; align-items: center; }
+        .search-item:hover { background: #e8f8f5; border-left: 5px solid var(--success); }
+
+        /* Kotak Timbangan Kompak (PERMANEN MUNCUL) */
+        .nominal-box { background: #e8f8f5; padding: 15px; border-radius: 10px; border: 2px solid var(--success); margin-bottom: 15px; display: block; }
+        .nominal-title { color: var(--success); font-weight: 900; margin-bottom: 10px; font-size: 1rem; display: flex; align-items: center; gap: 5px; }
+        .scale-input-row { display: flex; align-items: center; gap: 12px; }
+        .scale-input { flex: 1; padding: 14px; font-size: 1.5rem; font-weight: 900; color: var(--success); text-align: center; border: 2px dashed var(--success); border-radius: 6px; outline: none; background: #fff; letter-spacing: 1px;}
+        .scale-input:focus { background: #fff; border-style: solid; }
+        .scale-info { font-size: 1rem; color: var(--primary); font-weight: bold; flex: 1.2; display: flex; flex-direction: column; gap: 6px; }
+
+        /* Highlight Kotak Kembalian Besar */
+        .change-display-container { background: #e8f8f5; border: 3px solid var(--success); padding: 20px; border-radius: 10px; margin-top: 15px; text-align: center; transition: all 0.3s ease; }
+        .change-display-container.kurang { background: #fdedec; border-color: var(--danger); }
+        .change-label { font-size: 1.2rem; font-weight: 900; color: #444; margin-bottom: 5px; text-transform: uppercase; }
+        .change-value { font-size: 2.8rem; font-weight: 900; color: var(--success); letter-spacing: 1px; }
+        .change-display-container.kurang .change-value { color: var(--danger); }
+
+        /* Kalkulator Grid */
+        .calc-container { background: var(--primary); padding: 15px; border-radius: 12px; margin-top: 15px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
+        .calc-display { grid-column: 1 / -1; background: #e0f7fa; color: #006064; text-align: right; padding: 20px; font-size: 2.8rem; border-radius: 8px; font-weight: 900; border: 3px solid #b2ebf2; margin-bottom: 5px; font-family: monospace; overflow-x: auto; letter-spacing: 2px;}
+        .calc-btn { background: #fff; color: var(--primary); padding: 22px 0; font-size: 1.8rem; border-radius: 8px; font-weight: 900; text-align: center; cursor: pointer; box-shadow: 0 5px 0 #bdc3c7; user-select: none; transition: 0.1s; display: flex; align-items: center; justify-content: center; }
+        .calc-btn:active { transform: translateY(5px); box-shadow: none; }
+        .calc-btn.op { background: var(--warning); color: #fff; box-shadow: 0 5px 0 #d35400; font-size: 2rem; }
+        .calc-btn.clear { background: var(--danger); color: #fff; box-shadow: 0 5px 0 #c0392b; }
+        .calc-btn.plus-btn { grid-row: span 2; background: var(--success); box-shadow: 0 5px 0 #27ae60; color: white; font-size: 2.5rem; }
+        .calc-btn.eq-btn { grid-column: span 4; background: var(--accent); box-shadow: 0 5px 0 #2980b9; color: white; font-size: 2rem; margin-top: 5px; }
+
+        /* Tables */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; font-size: 1rem; text-align: left; min-width: 400px;}
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { background: var(--primary); color: white; font-size: 0.85rem; text-transform: uppercase; }
+        .badge { display: inline-block; padding: 6px 10px; border-radius: 6px; font-weight: 900; font-size: 0.8rem; text-transform: uppercase; min-width: 60px; text-align: center; }
+
+        /* Qty Updater CSS */
+        .qty-updater { display: flex; align-items: center; gap: 5px; justify-content: center; }
+        .btn-qty { background: #eee; color: #333; border: 1px solid #ccc; width: 35px; height: 35px; border-radius: 6px; font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;}
+        .btn-qty:active { background: #ddd; transform: scale(0.95); }
+        .cart-qty-val { font-size: 1.1rem; font-weight: 900; color: var(--primary); min-width: 30px; text-align: center; cursor: pointer; text-decoration: underline;}
+
+        /* Dashboard Grid */
+        .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .dash-box { padding: 15px 10px; border-radius: 10px; text-align: center; color: white; display: flex; flex-direction: column; justify-content: center; }
+        .dash-box span { font-size: 0.8rem; opacity: 0.9; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .dash-box strong { font-size: 1.2rem; font-weight: 900; word-break: break-word; }
+
+        /* Modals Custom */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.2s; padding: 15px; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-box { background: #ffffff; padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; transform: scale(0.95); opacity: 0; transition: 0.2s; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .modal-overlay.active .modal-box { transform: scale(1); opacity: 1; }
+        .modal-title { font-size: 1.4rem; font-weight: 900; color: var(--primary); margin-bottom: 15px; text-align: center; text-transform: uppercase;}
+        .modal-msg { font-size: 1.1rem; color: #444; margin-bottom: 25px; text-align: center; font-weight: 700; line-height: 1.4; }
+        
+        .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none; }
+        .toast { background: var(--primary); color: white; padding: 16px; border-radius: 10px; font-weight: 800; font-size: 1rem; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transform: translateY(-100px); opacity: 0; transition: 0.4s; border-bottom: 4px solid var(--success); }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { border-color: var(--danger); }
+        .toggle-btn-std { font-size: 0.8rem; background: var(--border); color: var(--primary); padding: 6px 12px; border-radius: 6px; font-weight: bold; }
     </style>
 </head>
-<body class="w-full h-[100dvh] overflow-hidden flex justify-center text-slate-900 dark:text-white font-sans selection:bg-blue-200 dark:selection:bg-blue-900 relative">
+<body>
 
-    <div id="app-container" class="w-full max-w-md h-full bg-slate-50 dark:bg-slate-950 flex flex-col relative shadow-2xl transition-colors duration-300 overflow-hidden">
-        
-        <!-- ================= MAIN DASHBOARD ================= -->
-        <div id="view-dashboard" class="flex flex-col h-full w-full absolute inset-0 z-10 bg-slate-50 dark:bg-slate-950">
-            <header class="px-5 pt-safe pb-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20 flex justify-between items-end shadow-sm h-[90px]">
-                <div class="flex items-center gap-3">
-                    <svg viewBox="0 0 100 100" class="w-11 h-11" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 25a5 5 0 015-5h50a5 5 0 015 5v50a5 5 0 01-5 5H25a5 5 0 01-5-5V25z" class="text-blue-600 dark:text-blue-500" />
-                        <path d="M35 40h30M35 55h30" class="text-slate-700 dark:text-slate-200" stroke-width="7"/>
-                        <path d="M45 70h10" class="text-blue-600 dark:text-blue-500" stroke-width="8"/>
-                    </svg>
-                    <div>
-                        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">KKNKU</h1>
-                        <span class="text-[10px] font-bold text-blue-600 tracking-widest uppercase bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">Pro Dashboard</span>
-                    </div>
-                </div>
-                <button id="btn-theme" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 active:scale-95 transition-all">
-                    <i data-lucide="moon" id="icon-theme" class="w-5 h-5"></i>
-                </button>
-            </header>
+    <!-- Area Toast -->
+    <div id="toastBox" class="toast-container"></div>
 
-            <main id="content-area" class="flex-1 overflow-y-auto px-4 py-6 pb-32 scroll-smooth">
-                <!-- DOM Dihasilkan oleh Virtualization JS -->
-            </main>
-
-            <nav class="absolute bottom-0 w-full z-30">
-                <div class="relative bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
-                    <div class="absolute left-1/2 -top-6 -translate-x-1/2">
-                        <button id="btn-fab" class="flex items-center justify-center w-[56px] h-[56px] bg-blue-600 text-white rounded-full shadow-[0_8px_16px_rgba(37,99,235,0.4)] hover:scale-105 active:scale-95 transition-all outline-none border-[6px] border-slate-50 dark:border-slate-950">
-                            <i data-lucide="plus" class="w-7 h-7 stroke-[3]"></i>
-                        </button>
-                    </div>
-                    <div class="flex justify-between items-center h-[64px] px-2 max-w-sm mx-auto">
-                        <div class="flex w-5/12 justify-evenly">
-                            <button onclick="switchTab('notes')" id="tab-notes" class="nav-btn flex flex-col items-center justify-center w-[60px] h-[50px] rounded-xl transition-colors text-slate-400">
-                                <i data-lucide="book-open" class="w-5 h-5 mb-0.5 nav-icon stroke-2"></i>
-                                <span class="text-[9px] font-extrabold tracking-wider">ARSIP</span>
-                            </button>
-                            <button onclick="switchTab('tasks')" id="tab-tasks" class="nav-btn flex flex-col items-center justify-center w-[60px] h-[50px] rounded-xl transition-colors text-slate-400">
-                                <i data-lucide="check-square" class="w-5 h-5 mb-0.5 nav-icon stroke-2"></i>
-                                <span class="text-[9px] font-extrabold tracking-wider">TUGAS</span>
-                            </button>
-                        </div>
-                        <div class="w-2/12"></div>
-                        <div class="flex w-5/12 justify-evenly">
-                            <button onclick="switchTab('agenda')" id="tab-agenda" class="nav-btn flex flex-col items-center justify-center w-[60px] h-[50px] rounded-xl transition-colors text-slate-400">
-                                <i data-lucide="calendar-days" class="w-5 h-5 mb-0.5 nav-icon stroke-2"></i>
-                                <span class="text-[9px] font-extrabold tracking-wider">JADWAL</span>
-                            </button>
-                            <button onclick="switchTab('templates')" id="tab-templates" class="nav-btn flex flex-col items-center justify-center w-[60px] h-[50px] rounded-xl transition-colors text-slate-400">
-                                <i data-lucide="briefcase" class="w-5 h-5 mb-0.5 nav-icon stroke-2"></i>
-                                <span class="text-[9px] font-extrabold tracking-wider">SURAT</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+    <!-- 1. Custom Alert -->
+    <div id="customAlert" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" id="alertTitle" style="color: var(--danger);">Peringatan</div>
+            <div class="modal-msg" id="alertMsg">Pesan</div>
+            <button class="btn-primary" onclick="closeModal('customAlert')">MENGERTI</button>
         </div>
-
-        <!-- ================= EDITOR VIEW ================= -->
-        <div id="view-editor" class="hidden flex flex-col h-full w-full absolute inset-0 z-50 bg-slate-50 dark:bg-slate-950 animate-in">
-            <div class="flex justify-between items-center px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-safe">
-                <button onclick="closeEditor()" class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"><i data-lucide="arrow-left"></i></button>
-                <span id="editor-type-label" class="font-bold text-xs tracking-widest uppercase text-slate-800 dark:text-slate-200">Editor Arsip</span>
-                <button onclick="saveNote()" class="p-2 text-blue-600 bg-blue-50 dark:bg-blue-900/40 rounded-full active:scale-95 transition-all"><i data-lucide="check"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto flex flex-col">
-                <div class="bg-white dark:bg-slate-900 px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-                    <input type="text" id="editor-title" placeholder="Subjek Dokumen..." class="w-full text-2xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-300 focus:ring-0 px-0 mb-3" />
-                    <div class="flex items-center gap-2 text-slate-500 text-sm bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-100 dark:border-slate-800 inline-flex">
-                        <i data-lucide="calendar" class="w-4 h-4"></i>
-                        <input type="datetime-local" id="editor-date" class="bg-transparent border-none outline-none focus:ring-0 text-slate-700 dark:text-slate-300 cursor-pointer p-0 font-medium text-xs" />
-                    </div>
-                </div>
-                <div id="quick-insert-bar" class="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide bg-slate-100 dark:bg-slate-950 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-sm items-center">
-                    <!-- Template Cepat Diinjeksi JS -->
-                </div>
-                <textarea id="editor-content" placeholder="Mulai mengetik detail di sini..." class="w-full flex-1 p-5 bg-white dark:bg-slate-900 border-none outline-none text-slate-800 dark:text-slate-200 resize-none leading-relaxed focus:ring-0 text-base pb-32"></textarea>
-            </div>
-        </div>
-
-        <!-- ================= VIEWER VIEW ================= -->
-        <div id="view-viewer" class="hidden flex flex-col h-full w-full absolute inset-0 z-40 bg-white dark:bg-slate-900 animate-in">
-            <div class="flex justify-between items-center px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-safe shadow-sm">
-                <button onclick="closeViewer()" class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><i data-lucide="arrow-left"></i></button>
-                <span id="viewer-type-label" class="font-semibold text-xs tracking-widest text-slate-400 uppercase">Dokumen</span>
-                <div class="flex gap-2 items-center">
-                    <button onclick="shareDoc()" class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all active:scale-95" title="Bagikan"><i data-lucide="share-2" class="w-4 h-4"></i></button>
-                    <button id="btn-use-template" onclick="useTemplate()" class="hidden p-2 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-full transition-all active:scale-95" title="Gunakan Template"><i data-lucide="file-plus" class="w-4 h-4"></i></button>
-                    <button id="btn-edit-doc" onclick="editCurrentNote()" class="p-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full transition-all active:scale-95" title="Edit"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                    <button onclick="copyViewerText()" id="btn-copy" class="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold transition-all bg-blue-600 text-white">
-                        <i data-lucide="copy" class="w-4 h-4 icon-copy"></i> <span class="text-copy">Salin</span>
-                    </button>
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 scroll-smooth relative">
-                <button id="btn-script-filter" onclick="openScriptView()" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl mb-6 shadow-lg active:scale-[0.98] transition-all font-bold text-sm tracking-wide hidden">
-                    <i data-lucide="wand-2" class="w-5 h-5"></i> FILTER & BUAT NASKAH
-                </button>
-                <h1 id="viewer-title" class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-snug"></h1>
-                <p id="viewer-date" class="text-xs font-semibold text-slate-400 mb-6 border-b border-slate-200 dark:border-slate-800 pb-4"></p>
-                <div id="viewer-content" class="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed text-[15px]"></div>
-            </div>
-        </div>
-
-        <!-- ================= SCRIPT TELEPROMPTER VIEW ================= -->
-        <div id="view-script" class="hidden flex flex-col h-full w-full absolute inset-0 z-50 bg-slate-900 animate-zoom text-white">
-            <div class="flex justify-between items-center px-4 py-3 border-b border-slate-700 bg-slate-800/90 backdrop-blur-md pt-safe">
-                <button onclick="closeScriptView()" class="p-2 text-slate-300 hover:bg-slate-700 rounded-full"><i data-lucide="arrow-left"></i></button>
-                <span class="font-bold text-xs tracking-widest uppercase text-emerald-400 flex items-center gap-2"><i data-lucide="wand-2" class="w-3.5 h-3.5"></i> Mode Pembacaan</span>
-                <div class="w-10"></div>
-            </div>
-            <div class="flex-1 overflow-y-auto p-8 scroll-smooth flex flex-col justify-center pb-20">
-                <div class="text-center mb-8">
-                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Naskah Kesimpulan</h2>
-                    <h1 id="script-title" class="text-2xl font-extrabold text-white leading-snug"></h1>
-                </div>
-                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-2xl relative">
-                    <div class="absolute -top-4 -left-4 bg-emerald-500 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i data-lucide="mic-2" class="w-4 h-4"></i></div>
-                    <p class="text-lg leading-relaxed text-slate-300 italic mb-6">"Berdasarkan hasil diskusi kita pada kegiatan hari ini, izinkan saya membacakan rangkuman kesimpulan dan keputusan yang telah disepakati bersama:"</p>
-                    <div id="script-points" class="space-y-4 mb-6"></div>
-                    <p class="text-lg leading-relaxed text-slate-300 italic border-t border-slate-700 pt-6">"Demikian kesimpulan rapat hari ini. Kami mohon komitmen seluruh pihak terkait untuk melaksanakan keputusan tersebut. Terima kasih."</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= CUSTOM CONFIRM MODAL ================= -->
-        <div id="confirm-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade">
-            <div class="bg-white dark:bg-slate-800 w-full max-w-[320px] rounded-2xl shadow-2xl p-6 animate-zoom border border-slate-200 dark:border-slate-700">
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2" id="modal-title">Konfirmasi</h3>
-                <p class="text-slate-500 dark:text-slate-400 mb-6 text-sm" id="modal-desc">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
-                <div class="flex justify-end gap-3">
-                    <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Batal</button>
-                    <button id="modal-confirm-btn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-colors">Hapus</button>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <script>
-        // Pendaftaran Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW Registered!', reg.scope))
-                    .catch(err => console.error('SW Failed!', err));
-            });
-        }
+    <!-- 2. Custom Confirm -->
+    <div id="customConfirm" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" id="confirmTitle">Konfirmasi</div>
+            <div class="modal-msg" id="confirmMsg">Apakah Anda yakin?</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn-thumb" style="background: var(--border); color: #333;" onclick="closeModal('customConfirm')">BATAL</button>
+                <button class="btn-thumb btn-danger" id="confirmBtnYes">YA, YAKIN</button>
+            </div>
+        </div>
+    </div>
 
-        const QUICK_INSERT_TEXTS = [
-            { icon: 'list', label: 'Poin', text: "\n• " },
-            { icon: 'mic-2', label: 'Sambutan', text: "Assalamu’alaikum Warahmatullahi Wabarakatuh.\nSelamat pagi/siang/sore, dan salam sejahtera bagi kita semua.\n\nYang terhormat Bapak/Ibu Kepala Desa beserta jajaran perangkat desa,\nYang kami hormati tokoh agama, tokoh masyarakat, dan pimpinan lembaga desa,\nSerta rekan-rekan mahasiswa KKN yang saya banggakan.\n\nPuji syukur senantiasa kita panjatkan kehadirat Allah SWT, Tuhan Yang Maha Esa, karena atas rahmat dan karunia-Nya kita dapat berkumpul pada kesempatan yang baik ini dalam keadaan sehat walafiat. Salawat serta salam semoga senantiasa tercurahkan kepada junjungan kita, Nabi Muhammad SAW.\n\nMelalui kesempatan ini, saya mewakili seluruh jajaran panitia dan tim KKN mengucapkan terima kasih yang tak terhingga atas waktu, tenaga, fasilitas, dan bimbingan yang telah diberikan kepada kami. Kehadiran kami di desa ini pada hakikatnya bukan untuk menggurui, melainkan untuk belajar, berkolaborasi secara nyata, dan mengabdi demi kemajuan desa yang kita cintai ini bersama-sama...\n\n(Silakan lanjutkan sambutan spesifik di sini)" },
-            { icon: 'target', label: 'Tujuan', text: "Adapun tujuan utama dari penyelenggaraan program dan kegiatan ini meliputi poin-poin berikut:\n\n1. Menggali dan mengoptimalkan potensi lokal desa melalui pendekatan akademis dan praktis agar berdaya guna secara ekonomi maupun sosial.\n2. Membangun sinergi yang kuat dan berkelanjutan antara perguruan tinggi, pemerintah desa, dan masyarakat luas dalam kerangka pembangunan inklusif.\n3. Memberikan solusi nyata dan tepat guna terhadap permasalahan yang ada di lapangan melalui penerapan ilmu pengetahuan dan teknologi (IPTEK).\n4. Meningkatkan kapasitas partisipatif masyarakat desa agar lebih mandiri dan proaktif dalam menghadapi tantangan ke depan.\n\nBesar harapan kami, keseluruhan output dari kegiatan hari ini dapat diimplementasikan dengan baik serta memberikan dampak positif jangka panjang bagi kesejahteraan masyarakat." },
-            { icon: 'clock', label: 'Pembukaan', text: "--- PEMBUKAAN RAPAT / ACARA ---\n\nHari, Tanggal : [Isi Hari, DD/MM/YYYY]\nWaktu         : [00:00] WIB - Selesai\nTempat        : [Lokasi Rapat]\n\nAgenda Utama  :\n• Pembahasan teknis rancangan pelaksanaan program kerja.\n• Pembagian tugas pokok dan fungsi (Tupoksi) kepanitiaan.\n• Penetapan timeline kegiatan dan tenggat waktu (Deadline).\n\nPimpinan Rapat: [Nama Kordes/PJ]\nNotulis       : [Nama Sekretaris]\nJumlah Hadir  : [Jumlah] Orang (Daftar Absensi Terlampir)\n\n---------------------------------------\n\nRingkasan Diskusi, Arahan, & Aspirasi Forum:\n• " },
-            { icon: 'check-circle-2', label: 'Penutupan', text: "\n\n---------------------------------------\n--- KESIMPULAN & PENUTUPAN ---\n\nBerdasarkan musyawarah mufakat, berikut adalah Keputusan Final Forum:\n\n1. [Sebutkan keputusan 1 secara rinci dan terukur] (PIC: Nama Penanggung Jawab)\n2. [Sebutkan keputusan 2 beserta tahapan eksekusinya] (Target Selesai: DD/MM/YYYY)\n3. [Sebutkan keputusan 3 jika ada tindak lanjut krusial]\n\nRapat/Acara ini resmi ditutup pada pukul [00:00] WIB. Seluruh kesepakatan tertulis di atas telah dibacakan ulang, disetujui bersama oleh forum secara terbuka, dan bersifat mengikat untuk dilaksanakan dengan penuh rasa tanggung jawab oleh seluruh pihak yang ditunjuk.\n\nSekian dokumen notulensi ini dibuat sebagai arsip sah persidangan.\n\nWassalamu'alaikum Warahmatullahi Wabarakatuh.\n\nMengetahui dan Mengesahkan,\n\nPimpinan Rapat                                Notulis\n\n\n(_________________________)                   (_________________________)" }
-        ];
+    <!-- 3. Custom Prompt -->
+    <div id="customPrompt" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" id="promptTitle">Input Data</div>
+            <div class="modal-msg" id="promptMsg" style="margin-bottom: 10px;">Masukkan data:</div>
+            <input type="text" id="promptInput" style="margin-bottom: 20px; text-align: center; font-size: 1.5rem;" autocomplete="off">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn-thumb" style="background: var(--border); color: #333;" onclick="closeModal('customPrompt')">BATAL</button>
+                <button class="btn-thumb btn-success" id="promptBtnSave">SIMPAN</button>
+            </div>
+        </div>
+    </div>
 
-        // 32 Default Template Disimpan ke Variabel Statis untuk Fallback
-        const DEFAULT_TEMPLATES = [
-            { id: 't1', category: 'Pra-KKN', title: '1. Surat Tugas Mahasiswa KKN', content: `[KOP SURAT KAMPUS/PANITIA KKN]\n\nNomor     : 001/ST-KKN/[Bulan Romawi]/[Tahun]\nLampiran  : 1 Berkas\nHal       : Surat Tugas Mahasiswa KKN\n\nYth. Kepala Desa [Nama Desa]\nKecamatan [Nama Kecamatan], Kabupaten [Nama Kabupaten]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDengan hormat, sehubungan dengan pelaksanaan Kuliah Kerja Nyata (KKN) Universitas [Nama Kampus] Tahun Akademik [Tahun], bersama ini kami menugaskan mahasiswa yang namanya tercantum dalam lampiran surat ini untuk melaksanakan program KKN di Desa [Nama Desa], mulai tanggal [Tanggal Mulai] s.d. [Tanggal Selesai].\n\nDemikian surat tugas ini dibuat agar dapat dipergunakan sebagaimana mestinya. Atas perhatian dan kerja sama Bapak/Ibu, kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Kota Kampus], [Tanggal Surat]\nMengetahui,\nKetua LPPM / Panitia KKN\n\n\n(Nama Terang & Gelar)\nNIP. ....................` },
-            { id: 't2', category: 'Pra-KKN', title: '2. Surat Pengantar/Penerjunan KKN', content: `[KOP SURAT KAMPUS]\n\nNomor     : 002/SP-KKN/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Surat Pengantar Penerjunan KKN\n\nYth. Kepala Desa [Nama Desa]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nBerdasarkan program Kuliah Kerja Nyata (KKN) Universitas [Nama Kampus], kami selaku Dosen Pembimbing Lapangan (DPL) secara resmi menyerahkan [Jumlah] mahasiswa KKN kepada pihak Pemerintah Desa [Nama Desa] untuk melaksanakan pengabdian masyarakat terhitung mulai [Tanggal Mulai] s.d. [Tanggal Selesai].\n\nKami memohon bimbingan, arahan, dan dukungan dari Bapak/Ibu selama mahasiswa berada di lokasi KKN. \n\nWassalamu'alaikum Wr. Wb.\n\n[Kota], [Tanggal]\nDosen Pembimbing Lapangan\n\n\n(Nama DPL & Gelar)\nNIP. ....................` },
-            { id: 't3', category: 'Pra-KKN', title: '3. Surat Permohonan Izin Lokasi KKN', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 003/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Proposal KKN\nHal       : Permohonan Izin Lokasi KKN\n\nYth. Kepala Bakesbangpol / Bupati [Nama Kabupaten]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDalam rangka pelaksanaan Kuliah Kerja Nyata (KKN) Universitas [Nama Kampus], kami memohon izin untuk menjadikan Desa [Nama Desa], Kecamatan [Nama Kecamatan] sebagai lokasi pelaksanaan KKN pada [Tanggal Mulai] s.d. [Tanggal Selesai].\n\nBersama ini kami lampirkan proposal kegiatan sebagai bahan pertimbangan Bapak/Ibu. Atas perkenan dan izin yang diberikan, kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Kota], [Tanggal]\nKetua Kelompok KKN                          Sekretaris\n\n\n(Nama Ketua)                                (Nama Sekretaris)` },
-            { id: 't4', category: 'Pra-KKN', title: '4. Surat Pernyataan Peserta KKN', content: `SURAT PERNYATAAN PESERTA KKN\n\nYang bertanda tangan di bawah ini:\nNama          : [Nama Mahasiswa]\nNIM           : [NIM]\nFakultas/Prodi: [Fakultas / Program Studi]\nKelompok      : [Nomor/Nama Kelompok]\n\nDengan ini menyatakan BERSEDIA mematuhi seluruh tata tertib pelaksanaan Kuliah Kerja Nyata (KKN) Universitas [Nama Kampus] Tahun [Tahun] serta menjaga nama baik almamater, norma agama, dan norma sosial di lokasi KKN. Apabila saya melanggar, saya bersedia menerima sanksi akademis sesuai ketentuan yang berlaku.\n\nDemikian surat pernyataan ini saya buat dengan kesadaran penuh tanpa paksaan dari pihak mana pun.\n\n[Kota], [Tanggal]\nYang Membuat Pernyataan,\n\n[Meterai 10.000]\n(Nama Mahasiswa)\nNIM. [NIM]` },
-            { id: 't5', category: 'Pra-KKN', title: '5. Surat Izin Orang Tua/Wali', content: `SURAT IZIN ORANG TUA/WALI\n\nYang bertanda tangan di bawah ini:\nNama Orang Tua/Wali : [Nama Orang Tua]\nAlamat Lengkap      : [Alamat Lengkap]\nNo. HP/Telepon      : [Nomor Telepon Aktif]\n\nAdalah orang tua/wali dari mahasiswa:\nNama          : [Nama Mahasiswa]\nNIM           : [NIM]\nFakultas/Prodi: [Fakultas/Prodi]\n\nDengan ini memberikan IZIN kepada anak kami tersebut untuk mengikuti seluruh rangkaian kegiatan Kuliah Kerja Nyata (KKN) di Desa [Nama Desa] pada tanggal [Tanggal Mulai] s.d. [Tanggal Selesai]. \n\nDemikian surat izin ini dibuat untuk dipergunakan sebagaimana mestinya.\n\n[Kota Asal], [Tanggal]\nOrang Tua / Wali,\n\n\n(Nama Terang Orang Tua)` },
-            { id: 't6', category: 'Pra-KKN', title: '6. Surat Kesediaan Desa Menerima Mahasiswa', content: `[KOP SURAT PEMERINTAH DESA]\n\nSURAT KETERANGAN KESEDIAAN\nNomor: ........................\n\nYang bertanda tangan di bawah ini:\nNama     : [Nama Kepala Desa]\nJabatan  : Kepala Desa [Nama Desa]\nKecamatan: [Nama Kecamatan]\n\nBerdasarkan surat permohonan dari [Nama Kampus/Kelompok KKN], dengan ini menyatakan BERSEDIA menerima penempatan mahasiswa Kuliah Kerja Nyata (KKN) di wilayah kami terhitung mulai tanggal [Tanggal Mulai] sampai dengan [Tanggal Selesai].\n\nDemikian surat kesediaan ini dibuat untuk menjadi syarat kelengkapan administrasi.\n\n[Nama Desa], [Tanggal]\nKepala Desa [Nama Desa]\n\n\n[Stempel Desa]\n(Nama Kepala Desa)` },
-            { id: 't7', category: 'Pelaksanaan', title: '7. Surat Undangan Rapat', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 007/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Undangan Rapat Koordinasi Kegiatan\n\nYth. [Nama/Jabatan Undangan, misal: Ketua RT/Pemuda Karang Taruna]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nSehubungan dengan akan dilaksanakannya program [Nama Program Kerja], kami mengundang Bapak/Ibu/Saudara/i untuk hadir dalam rapat koordinasi yang akan diselenggarakan pada:\n\nHari, Tanggal : [Hari, DD/MM/YYYY]\nWaktu         : [Jam] WIB s.d. Selesai\nTempat        : [Lokasi Rapat]\nAgenda        : Pembahasan teknis pelaksanaan [Nama Program]\n\nMengingat pentingnya acara tersebut, kami sangat mengharapkan kehadiran Bapak/Ibu/Saudara/i tepat pada waktunya. Atas perhatiannya diucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua Pelaksana                             Sekretaris\n\n\n(Nama)                                      (Nama)` },
-            { id: 't8', category: 'Pelaksanaan', title: '8. Surat Undangan Sosialisasi', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 008/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Susunan Acara\nHal       : Undangan Sosialisasi Program KKN\n\nYth. Warga Desa [Nama Desa]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDalam rangka pelaksanaan pengabdian masyarakat, Mahasiswa KKN Universitas [Nama Kampus] bermaksud mengadakan kegiatan Sosialisasi "[Judul Sosialisasi]". Sehubungan dengan hal tersebut, kami mengundang Bapak/Ibu/Saudara/i untuk hadir pada:\n\nHari, Tanggal : [Hari, DD/MM/YYYY]\nWaktu         : [Jam] WIB s.d. Selesai\nTempat        : [Lokasi Kegiatan]\n\nKehadiran dan partisipasi aktif Bapak/Ibu sangat kami harapkan demi suksesnya kegiatan ini. Atas perhatiannya kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua KKN)` },
-            { id: 't9', category: 'Pelaksanaan', title: '9. Surat Permohonan Audiensi', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 009/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Permohonan Audiensi\n\nYth. [Nama Pejabat/Instansi, misal: Kepala Dinas Pertanian]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nKami dari mahasiswa Kuliah Kerja Nyata (KKN) Universitas [Nama Kampus] yang bertugas di Desa [Nama Desa], bermaksud mengajukan permohonan audiensi dan silaturahmi dengan Bapak/Ibu untuk membahas potensi kolaborasi program kerja di bidang [Bidang Program].\n\nAdapun audiensi kami harapkan dapat dilaksanakan pada waktu dan tempat yang menyesuaikan dengan jadwal Bapak/Ibu. (Alternatif pengajuan: Hari [Hari], [Tanggal]).\n\nDemikian surat permohonan ini kami sampaikan. Besar harapan kami permohonan ini dapat diterima.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua KKN)` },
-            { id: 't10', category: 'Pelaksanaan', title: '10. Surat Permohonan Izin Kegiatan', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 010/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Proposal Kegiatan\nHal       : Permohonan Izin Penyelenggaraan Kegiatan\n\nYth. Kepala Desa [Nama Desa] / Polsek [Nama Kecamatan]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nSebagai bagian dari program kerja KKN, kami berencana mengadakan kegiatan tingkat desa berupa "[Nama Kegiatan Besar/Festival]" yang akan melibatkan warga dalam jumlah besar. Kegiatan akan dilaksanakan pada:\n\nHari, Tanggal : [Hari, DD/MM/YYYY]\nWaktu         : [Jam] WIB s.d. Selesai\nTempat        : [Lokasi Kegiatan]\n\nUntuk itu, kami memohon izin penyelenggaraan dan bantuan pengamanan/koordinasi demi kelancaran acara tersebut. Detail kegiatan terlampir.\n\nAtas izin dan kerjasamanya, kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua Panitia                               Mengetahui Kades,\n\n\n(Nama Panitia)                              (Nama Kades)` },
-            { id: 't11', category: 'Pelaksanaan', title: '11. Surat Permohonan Peminjaman Tempat', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 011/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Permohonan Peminjaman Tempat/Fasilitas\n\nYth. Pengelola [Nama Gedung/Fasilitas]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nSehubungan dengan program kerja KKN berupa "[Nama Kegiatan]", kami memohon izin untuk meminjam fasilitas berupa [Sebutkan spesifik: Balai Desa / Lapangan / Proyektor / Sound System] pada:\n\nHari, Tanggal : [Hari, DD/MM/YYYY]\nWaktu         : [Jam] WIB s.d. Selesai\n\nFasilitas tersebut akan kami gunakan dan kami pastikan kebersihannya serta dikembalikan dalam kondisi baik seperti semula.\n\nAtas izin yang diberikan, kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nPenanggung Jawab Sarpras\n\n\n(Nama PJ Sarpras)` },
-            { id: 't12', category: 'Pelaksanaan', title: '12. Surat Permohonan Narasumber', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 012/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : TOR (Term of Reference)\nHal       : Permohonan Menjadi Narasumber\n\nYth. [Nama Calon Narasumber beserta Gelar]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDalam rangka meningkatkan kapasitas warga melalui program kerja KKN, kami akan mengadakan kegiatan "[Nama Kegiatan]". Mengingat keahlian dan pengalaman Bapak/Ibu di bidang [Bidang Keahlian], kami bermaksud memohon kesediaan Bapak/Ibu untuk menjadi Narasumber dalam kegiatan tersebut, yang akan dilaksanakan pada:\n\nHari, Tanggal : [Hari, DD/MM/YYYY]\nWaktu         : [Jam] WIB\nTempat        : [Lokasi]\nTema Materi   : [Tema Spesifik]\n\nDemikian permohonan ini kami sampaikan. Kami sangat menantikan konfirmasi kesediaan Bapak/Ibu.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua Panitia\n\n\n(Nama Panitia)` },
-            { id: 't13', category: 'Sponsorship', title: '13. Pengajuan Permohonan Dana/Sponsor', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 013/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Proposal Sponsorship\nHal       : Permohonan Sponsor / Bantuan Dana\n\nYth. Pimpinan Instansi / Perusahaan [Nama Perusahaan]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nKami, tim KKN Universitas [Nama Kampus] yang mengabdi di Desa [Nama Desa], sedang mempersiapkan kegiatan puncak bertajuk "[Nama Kegiatan]". \n\nUntuk menyukseskan acara tersebut yang berdampak langsung bagi masyarakat, kami memohon kesediaan instansi/perusahaan yang Bapak/Ibu pimpin untuk dapat berpartisipasi sebagai sponsor/donatur. Adapun rincian anggaran dan bentuk penawaran kerjasama (kontraprestasi logo pada banner, umbul-umbul, dll) terlampir dalam proposal ini.\n\nBesar harapan kami Bapak/Ibu berkenan mendukung kegiatan ini. Atas perhatiannya kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua Panitia                               Bendahara\n\n\n(Nama Panitia)                              (Nama Bendahara)` },
-            { id: 't14', category: 'Sponsorship', title: '14. Permohonan Bantuan Barang (In-Kind)', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 014/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Daftar Kebutuhan Barang\nHal       : Permohonan Bantuan Barang/Peralatan\n\nYth. [Pimpinan Instansi/Donatur]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nSehubungan dengan pelaksanaan program pengadaan fasilitas publik/penghijauan berupa "[Nama Program]", kami dari tim KKN Universitas [Nama Kampus] membutuhkan beberapa material pendukung.\n\nMelalui surat ini, kami memohon bantuan Bapak/Ibu berupa barang/peralatan (seperti bibit tanaman / cat / tempat sampah - sesuaikan dengan lampiran). Bantuan ini akan langsung diserahkan dan dikelola bersama warga Desa [Nama Desa].\n\nAtas partisipasi dan bantuan Bapak/Ibu, kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua KKN)` },
-            { id: 't15', category: 'Pelaksanaan', title: '15. Surat Permohonan Kerja Sama Institusi', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 015/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Draf MoU/Konsep Kerjasama\nHal       : Permohonan Kerja Sama Institusional\n\nYth. [Kepala Instansi/Lembaga Mitra]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDalam mengoptimalkan potensi desa dan keberlanjutan program KKN, kami bermaksud mengajukan permohonan kerja sama antara kelompok KKN Universitas [Nama Kampus] Desa [Nama Desa] dengan instansi yang Bapak/Ibu pimpin dalam program "[Nama Program Bersama]".\n\nKerja sama ini diharapkan bersifat mutualisme. Bentuk teknis pelaksanaan terlampir dalam dokumen konsep kerjasama.\n\nDemikian permohonan ini kami ajukan untuk ditindaklanjuti.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua)` },
-            { id: 't16', category: 'Pelaksanaan', title: '16. Surat Tugas Panitia Internal KKN', content: `[KOP SURAT KELOMPOK KKN]\n\nSURAT TUGAS\nNomor: 016/KKN-[Desa]/[Bulan Romawi]/[Tahun]\n\nKetua Kelompok KKN Universitas [Nama Kampus] Desa [Nama Desa] dengan ini menugaskan:\n\nNama : [Nama Anggota]\nNIM  : [NIM]\nDivisi: [Nama Divisi]\n\nUntuk bertindak sebagai Person In Charge (PIC) sekaligus Panitia Utama dalam penyelenggaraan program "[Nama Program]" yang dilaksanakan pada [Tanggal Pelaksanaan].\n\nKepada yang bersangkutan diwajibkan untuk menjalankan tugas dengan penuh tanggung jawab dan melaporkan hasilnya kepada Ketua Kelompok.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua KKN)` },
-            { id: 't17', category: 'Pelaksanaan', title: '17. Surat Dispensasi Izin Anggota', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 017/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Permohonan Dispensasi Tidak Mengikuti KKN\n\nYth. Dosen Pembimbing Lapangan (DPL)\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDengan ini kami memberitahukan bahwa anggota kelompok kami:\nNama : [Nama Anggota]\nNIM  : [NIM]\n\nMemohon dispensasi izin tidak dapat berada di posko KKN selama [Jumlah] hari, terhitung tanggal [Tanggal Mulai] s.d. [Tanggal Selesai], dikarenakan [Alasan yang jelas dan mendesak, misal: Sakit/Urusan Keluarga/Ujian Susulan].\n\nDemikian permohonan dispensasi ini kami sampaikan agar menjadi maklum.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN                                 Mahasiswa Ybs,\n\n\n(Nama Ketua)                              (Nama Anggota)` },
-            { id: 't18', category: 'Pelaksanaan', title: '18. Surat Edaran Warga', content: `[KOP SURAT KELOMPOK KKN]\n\nSURAT EDARAN\nNomor: 018/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nTentang: [Judul Edaran, misal: Pelaksanaan Lomba Desa]\n\nYth. Seluruh Warga Desa [Nama Desa]\n\nAssalamu'alaikum Wr. Wb.\n\nDiberitahukan dengan hormat, sehubungan dengan perayaan [Nama Acara], Mahasiswa KKN Universitas [Nama Kampus] akan mengadakan berbagai perlombaan pada:\n\nHari/Tanggal : [Hari, Tanggal]\nTempat       : [Lokasi]\n\nKami mengimbau seluruh warga untuk berpartisipasi dan mendaftarkan diri pada posko KKN atau melalui Kepala Dusun masing-masing selambat-lambatnya tanggal [Tanggal Batas].\n\nDemikian edaran ini disampaikan. Atas perhatiannya kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua Panitia\n\n\n(Nama Panitia)` },
-            { id: 't19', category: 'Pelaksanaan', title: '19. Surat Pemberitahuan Kegiatan Rutin', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 019/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Pemberitahuan Pelaksanaan Kegiatan\n\nYth. Kepala Desa [Nama Desa]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nMelalui surat ini, kami memberitahukan bahwa tim KKN Universitas [Nama Kampus] akan melaksanakan agenda rutin berupa "[Nama Kegiatan Rutin, misal: Bimbingan Belajar Gratis]" yang akan berlangsung setiap hari [Hari], pukul [Jam], bertempat di [Lokasi].\n\nSurat ini bersifat sebagai pemberitahuan resmi agar aparat desa mengetahui pergerakan dan aktivitas mahasiswa di lingkungan desa.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua)` },
-            { id: 't20', category: 'Pelaksanaan', title: '20. Surat Keterangan Aktif KKN', content: `[KOP SURAT PEMERINTAH DESA / DPL]\n\nSURAT KETERANGAN AKTIF KKN\nNomor: .....................\n\nYang bertanda tangan di bawah ini menerangkan dengan sesungguhnya bahwa:\n\nNama          : [Nama Mahasiswa]\nNIM           : [NIM]\nFakultas/Prodi: [Fakultas]\n\nAdalah benar-benar tercatat secara aktif sedang melaksanakan Kuliah Kerja Nyata (KKN) di Desa [Nama Desa], Kecamatan [Nama Kecamatan] dari tanggal [Tanggal Mulai] hingga surat ini dikeluarkan.\n\nSurat keterangan ini diberikan untuk keperluan [Sebutkan Keperluan, misal: Persyaratan Beasiswa / Cuti Kerja].\n\n[Desa], [Tanggal]\nKepala Desa / DPL\n\n\n[Stempel & TTD]\n(Nama Lengkap)` },
-            { id: 't21', category: 'Pasca-KKN', title: '21. Surat Ucapan Terima Kasih Warga', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 021/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Ucapan Terima Kasih\n\nYth. Kepala Desa dan Seluruh Warga [Nama Desa]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nSeiring dengan berakhirnya masa tugas Kuliah Kerja Nyata (KKN) Universitas [Nama Kampus] di Desa [Nama Desa] pada [Tanggal Penarikan], kami segenap mahasiswa KKN mengucapkan TERIMA KASIH yang sebesar-besarnya atas segala bantuan, bimbingan, fasilitas, dan keramahan yang telah diberikan selama kami mengabdi.\n\nKami memohon maaf atas segala tutur kata atau perilaku yang kurang berkenan selama berinteraksi. Semoga silaturahmi tetap terjalin dengan baik.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN                                 Sekretaris\n\n\n(Nama Ketua)                              (Nama Sekretaris)` },
-            { id: 't22', category: 'Pasca-KKN', title: '22. Penyerahan Cinderamata Desa', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 022/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : -\nHal       : Penyerahan Cinderamata/Kenang-kenangan\n\nYth. Kepala Desa [Nama Desa]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nSebagai tanda kehormatan dan kenang-kenangan atas selesainya program KKN di Desa [Nama Desa], bersama surat ini kami serahkan cinderamata berupa [Sebutkan Bentuk Kenang-kenangan, misal: Plakat Vandel / Alat Tulis Kantor].\n\nKami berharap cinderamata ini dapat menjadi simbol tali persaudaraan antara Universitas [Nama Kampus] dengan Desa [Nama Desa].\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua)` },
-            { id: 't23', category: 'Pasca-KKN', title: '23. Berita Acara Serah Terima Program', content: `BERITA ACARA SERAH TERIMA PROGRAM KKN\nNomor: 023/BA-KKN/[Bulan Romawi]/[Tahun]\n\nPada hari ini, [Hari] tanggal [Tanggal] bulan [Bulan] tahun [Tahun], bertempat di Balai Desa [Nama Desa], telah dilakukan serah terima keberlanjutan program kerja KKN, antara:\n\n1. Nama   : [Nama Ketua KKN]\n   Jabatan: Ketua Kelompok KKN (Pihak Pertama)\n2. Nama   : [Nama Kades/Ketua Pemuda]\n   Jabatan: [Jabatan] (Pihak Kedua)\n\nPihak Pertama secara resmi menyerahkan hasil program kerja berupa fisik maupun non-fisik (Daftar aset terlampir) kepada Pihak Kedua. Pihak Kedua menerima penyerahan tersebut dan berkomitmen untuk mengelola serta merawatnya.\n\nDemikian berita acara ini dibuat untuk dipergunakan sebagaimana mestinya.\n\nPihak Pertama (Menyerahkan)                 Pihak Kedua (Menerima)\n\n(Nama Ketua KKN)                            (Nama Kades/Tokoh)` },
-            { id: 't24', category: 'Pasca-KKN', title: '24. Berita Acara Penutupan KKN', content: `BERITA ACARA PENUTUPAN KKN\nNomor: 024/BA-KKN/[Bulan Romawi]/[Tahun]\n\nPada hari ini, [Hari] tanggal [Tanggal] bulan [Bulan] tahun [Tahun], bertempat di [Lokasi Penutupan], telah dilaksanakan acara Penutupan dan Penarikan Mahasiswa KKN Universitas [Nama Kampus] Tahun [Tahun] di Desa [Nama Desa].\n\nAcara penutupan disahkan dan ditandatangani oleh DPL dan Kepala Desa, yang menandakan bahwa mahasiswa KKN secara resmi telah dibebastugaskan dari wilayah Desa [Nama Desa].\n\nDosen Pembimbing Lapangan                 Kepala Desa [Nama Desa]\n\n\n(Nama DPL)                                (Nama Kepala Desa)` },
-            { id: 't25', category: 'Pasca-KKN', title: '25. Surat Keterangan Selesai KKN', content: `[KOP SURAT PEMERINTAH DESA]\n\nSURAT KETERANGAN SELESAI KKN\nNomor: .....................\n\nKepala Desa [Nama Desa], Kecamatan [Nama Kecamatan], dengan ini menerangkan bahwa:\n\nNama Kelompok : Kelompok KKN [Nomor/Nama]\nJumlah Anggota: [Jumlah] Mahasiswa\nAsal Kampus   : Universitas [Nama Kampus]\n\nTelah SELESAI melaksanakan pengabdian Kuliah Kerja Nyata (KKN) di Desa [Nama Desa] dengan predikat [Baik/Sangat Baik] mulai tanggal [Tanggal Mulai] sampai dengan [Tanggal Selesai].\n\nDemikian surat keterangan ini dibuat dengan sebenar-benarnya untuk digunakan sebagai syarat administrasi pasca-KKN di kampus.\n\n[Desa], [Tanggal]\nKepala Desa [Nama Desa]\n\n\n[Stempel & TTD]\n(Nama Kepala Desa)` },
-            { id: 't26', category: 'Pasca-KKN', title: '26. Halaman Pengesahan LPJ', content: `HALAMAN PENGESAHAN\nLAPORAN PERTANGGUNGJAWABAN (LPJ) KKN\n\n1. Judul Laporan     : Laporan Akhir Pelaksanaan KKN Desa [Nama Desa]\n2. Nama Kelompok     : [Nomor Kelompok]\n3. Lokasi KKN        : Desa [Nama Desa], Kec. [Kecamatan], Kab. [Kabupaten]\n4. Waktu Pelaksanaan : [Tanggal Mulai] - [Tanggal Selesai]\n5. Dosen Pembimbing  : [Nama DPL beserta gelar]\n\nLaporan ini telah diperiksa, disetujui, dan disahkan kelayakannya pada tanggal: [Tanggal Pengesahan]\n\n\nMenyetujui,\n\nKepala Desa [Nama Desa]                     Ketua Kelompok KKN\n\n(Nama Kepala Desa)                          (Nama Ketua KKN)\n\n\nMengesahkan,\nDosen Pembimbing Lapangan (DPL)\n\n\n(Nama DPL)\nNIP. ....................` },
-            { id: 't27', category: 'Pelaksanaan', title: '27. Surat Permohonan Juri Perlombaan', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 027/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : 1 Berkas Petunjuk Teknis Lomba\nHal       : Permohonan Menjadi Dewan Juri\n\nYth. Bapak/Ibu [Nama Calon Juri beserta Gelar]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDalam rangka memeriahkan [Nama Acara, misal: Peringatan HUT RI ke-81], Mahasiswa KKN Universitas [Nama Kampus] menyelenggarakan "[Nama Lomba]". \n\nMengingat kapabilitas dan profesionalisme Bapak/Ibu, kami memohon kesediaannya untuk bertindak sebagai Dewan Juri pada acara tersebut yang akan dilaksanakan pada:\n\nHari, Tanggal : [Hari, Tanggal]\nWaktu         : [Jam] WIB\nTempat        : [Lokasi Lomba]\n\nBesar harapan kami agar Bapak/Ibu berkenan hadir. Atas perhatiannya diucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua Panitia\n\n\n(Nama Ketua Panitia)` },
-            { id: 't28', category: 'Sponsorship', title: '28. Penawaran Kerjasama Sponsor Terbuka', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 028/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : 1 Bundel Proposal Sponsorship\nHal       : Penawaran Ruang Promosi / Sponsorship\n\nYth. Manager Marketing / Pimpinan [Nama Perusahaan]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nTim KKN Universitas [Nama Kampus] Desa [Nama Desa] akan menggelar agenda "[Nama Acara Besar]" dengan estimasi partisipan mencapai [Angka] warga yang terdiri dari berbagai elemen masyarakat.\n\nAcara ini merupakan peluang strategis bagi perusahaan Bapak/Ibu untuk mempromosikan produk/jasa langsung kepada target audiens. Oleh karena itu, kami menawarkan beberapa paket sponsorship eksklusif (Tipe Platinum, Gold, Silver) yang mencakup penempatan logo, penyebutan brand, hingga pendirian stand/booth.\n\nDetail hak dan kewajiban tertera pada lampiran proposal. Kami sangat terbuka untuk berdiskusi lebih lanjut.\n\n[Desa], [Tanggal]\nKetua Panitia                               Divisi Sponsorship\n\n\n(Nama Panitia)                              (Nama PIC Sponsor)` },
-            { id: 't29', category: 'Sponsorship', title: '29. Ucapan Terima Kasih Sponsor Spesifik', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 029/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Laporan Dokumentasi Sponsor\nHal       : Ucapan Terima Kasih atas Sponsorship\n\nYth. Pimpinan [Nama Instansi/Perusahaan Sponsor]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nMelalui surat ini, kami segenap Panitia dan Mahasiswa KKN Universitas [Nama Kampus] mengucapkan terima kasih yang sebesar-besarnya atas dukungan pendanaan/fasilitas dari [Nama Perusahaan Bapak/Ibu] dalam menyukseskan acara "[Nama Acara]".\n\nBerkat kontribusi Bapak/Ibu, kegiatan ini berjalan dengan sangat lancar dan memberikan manfaat nyata bagi warga. Bersama ini pula kami lampirkan bukti dokumentasi kontraprestasi (penempatan logo) sebagai bentuk pertanggungjawaban kami.\n\nSemoga [Nama Perusahaan] semakin sukses dan jaya.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua KKN)` },
-            { id: 't30', category: 'Pasca-KKN', title: '30. Surat Undangan VIP Penutupan KKN', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 030/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Susunan Acara\nHal       : Undangan VIP Penutupan & Ekspose KKN\n\nYth. Bapak Camat [Nama Kecamatan] / Kepala Desa [Nama Desa]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nSehubungan dengan paripurnanya masa bakti Mahasiswa KKN Universitas [Nama Kampus] di Desa [Nama Desa], kami bermaksud menyelenggarakan acara "Ekspose Hasil KKN & Serah Terima Program" sekaligus perpisahan resmi.\n\nMengingat peran krusial Bapak/Ibu, kami memohon kehadiran Bapak/Ibu sebagai Tamu Kehormatan sekaligus memberikan sambutan penutupan, pada:\n\nHari, Tanggal : [Hari, Tanggal]\nWaktu         : [Jam] WIB\nTempat        : [Lokasi VIP]\n\nKehadiran Bapak/Ibu merupakan kehormatan tersendiri bagi kami. Terima kasih atas perhatiannya.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua KKN\n\n\n(Nama Ketua KKN)` },
-            { id: 't31', category: 'Pelaksanaan', title: '31. Surat Permohonan Layanan Kesehatan (Puskesmas)', content: `[KOP SURAT KELOMPOK KKN]\n\nNomor     : 031/KKN-[Desa]/[Bulan Romawi]/[Tahun]\nLampiran  : Proposal Kegiatan\nHal       : Permohonan Tenaga Medis / Cek Kesehatan\n\nYth. Kepala UPT Puskesmas [Nama Kecamatan]\ndi Tempat\n\nAssalamu'alaikum Wr. Wb.\n\nDalam rangka meningkatkan kesadaran kesehatan masyarakat, Mahasiswa KKN Universitas [Nama Kampus] bermaksud mengadakan "Bakti Sosial Cek Kesehatan Gratis" (Cek Tensi, Gula Darah, Asam Urat) untuk Lansia di Desa [Nama Desa].\n\nOleh karena itu, kami memohon kesediaan pihak Puskesmas untuk dapat mendelegasikan [Jumlah] tenaga medis pendamping, yang akan diselenggarakan pada:\n\nHari, Tanggal : [Hari, Tanggal]\nWaktu         : [Jam] WIB s.d Selesai\nTempat        : [Lokasi Balai Desa]\n\nAtas kerjasama dan bantuan Bapak/Ibu, kami ucapkan terima kasih.\n\nWassalamu'alaikum Wr. Wb.\n\n[Desa], [Tanggal]\nKetua Panitia\n\n\n(Nama Ketua Panitia)` },
-            { id: 't32', category: 'Pra-KKN', title: '32. Surat Keterangan Domisili Posko KKN', content: `[KOP SURAT PEMERINTAH DESA]\n\nSURAT KETERANGAN DOMISILI POSKO\nNomor: ........................\n\nYang bertanda tangan di bawah ini, Kepala Desa [Nama Desa], Kecamatan [Nama Kecamatan], menerangkan bahwa:\n\nNama Kelompok : Mahasiswa KKN Universitas [Nama Kampus]\nKetua Kelompok: [Nama Ketua]\nJumlah Anggota: [Jumlah] Orang\n\nAdalah benar saat ini berdomisili / mendirikan Posko Induk KKN di alamat:\nJalan / RT / RW: [Alamat Lengkap Posko]\nRumah Milik    : Bapak/Ibu [Nama Pemilik Rumah]\n\nSurat keterangan ini dibuat untuk keperluan pendataan keamanan dan ketertiban lingkungan selama masa Kuliah Kerja Nyata berlangsung dari [Tanggal Mulai] s.d. [Tanggal Selesai].\n\n[Desa], [Tanggal]\nKepala Desa [Nama Desa]\n\n\n[Stempel & TTD]\n(Nama Kepala Desa)` }
-        ];
+    <!-- 4. Modal Edit Qty / Harga Manual Keranjang -->
+    <div id="cartQtyModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" id="cartEditTitle">Ubah Data</div>
+            <div class="modal-msg" id="cartQtyMsg">Beras - Kg</div>
+            <input type="hidden" id="cartQtyId">
+            <input type="text" id="cartQtyInput" inputmode="decimal" style="margin-bottom: 20px; text-align: center; font-size: 2.5rem; font-weight: 900; color: var(--success); padding: 10px;" placeholder="0">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn-thumb" style="background: var(--border); color: #333;" onclick="closeModal('cartQtyModal')">BATAL</button>
+                <button class="btn-thumb btn-success" onclick="saveCartQty()">SIMPAN</button>
+            </div>
+        </div>
+    </div>
 
-        let state = {
-            theme: localStorage.getItem('kknku_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-            activeTab: 'notes',
-            notes: JSON.parse(localStorage.getItem('kknku_notes')) || [],
-            tasks: JSON.parse(localStorage.getItem('kknku_tasks')) || [],
-            agenda: JSON.parse(localStorage.getItem('kknku_agenda')) || [],
-            templates: JSON.parse(localStorage.getItem('kknku_templates')) || DEFAULT_TEMPLATES,
-            editingNoteId: null,
-            editingType: 'note',
-            viewingDoc: null,
-            editorUndoBuffer: '',
-            deleteTarget: null // Payload untuk operasi penghapusan {id, type}
-        };
+    <!-- 5. NEW: Modal Pilih Satuan (Basmi Popup Android Bawaan) -->
+    <div id="unitSelectModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">Pilih Satuan</div>
+            <div id="unitSelectContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 250px; overflow-y: auto; padding-bottom: 10px;">
+                <!-- Opsi satuan masuk sini lewat JS -->
+            </div>
+            <button class="btn-thumb" style="background: var(--danger); color: white; width: 100%; margin-top: 15px;" onclick="closeModal('unitSelectModal')">TUTUP</button>
+        </div>
+    </div>
 
-        if (state.notes.length === 0 && state.tasks.length === 0 && state.agenda.length === 0) {
-            state.notes = [{ id: `mock-1`, title: `Rapat Evaluasi Minggu Pertama`, content: `--- PEMBUKAAN RAPAT ---\n\nRingkasan Diskusi:\n• Warga mengeluhkan kurangnya sosialisasi terkait program bank sampah.\n• Divisi acara butuh tambahan dana untuk proyektor.\n\n--- KESIMPULAN ---\nKeputusan Final:\n1. Sosialisasi bank sampah akan diulang door-to-door pada hari Jumat.\n2. Dana proyektor dialihkan dari sisa kas konsumsi.\n3. Rapat selanjutnya diagendakan hari Minggu malam.`, date: new Date().toISOString() }];
-            state.tasks = [{ id: 'ts-1', text: 'Cetak surat undangan', pic: 'Sekretaris', done: false }];
-            state.agenda = [{ id: 'ag-1', text: 'Penyuluhan Pertanian', date: '2026-07-20', location: 'Balai Desa', done: false }];
-            saveData();
-        }
+    <!-- 6. Login Cloud Modal (Siap colok Supabase) -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-box" style="padding: 30px;">
+            <h2 style="justify-content: center; border:none; margin-bottom: 5px; font-size: 1.5rem;">☁️ CLOUD SYNC</h2>
+            <p style="font-size:1rem; color:#666; margin-bottom: 25px; font-weight: 700; text-align: center;">Simpan data permanen dan sinkronisasi otomatis.</p>
+            <button class="btn-thumb" onclick="loginGoogle()" style="background: #fff; color: #111; border: 2px solid #ddd; margin-bottom: 15px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 10px;"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg> 
+                Login Google
+            </button>
+            <button class="btn-thumb" onclick="closeModal('loginModal')" style="background: var(--bg); color: #555;">Nanti Saja (Lokal)</button>
+        </div>
+    </div>
 
-        function saveData() {
-            localStorage.setItem('kknku_notes', JSON.stringify(state.notes));
-            localStorage.setItem('kknku_tasks', JSON.stringify(state.tasks));
-            localStorage.setItem('kknku_agenda', JSON.stringify(state.agenda));
-            localStorage.setItem('kknku_templates', JSON.stringify(state.templates));
-        }
+    <!-- Sisi KIRI: Profil, Satuan & Database -->
+    <div>
+        <div class="panel">
+            <div id="userProfileBox" class="user-profile guest-mode">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>👤 <span id="userNameDisplay">Kasir Lokal</span></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="networkStatus" class="status-sync sync-offline">
+                        <div class="sync-dot"></div> <span id="syncStatusText">Offline Mode</span>
+                    </span>
+                    <button id="btnLoginBtn" class="btn-primary" style="padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="showModal('loginModal')">Login Cloud</button>
+                    <button id="btnLogoutBtn" class="btn-danger" style="display:none; padding: 8px 12px; font-size: 0.85rem; width: auto;" onclick="customConfirm('Keluar Akun?', 'Yakin mau balik ke mode tamu?', logoutGoogle)">Keluar</button>
+                </div>
+            </div>
 
-        function applyTheme() {
-            document.documentElement.classList.toggle('dark', state.theme === 'dark');
-            document.getElementById('icon-theme').setAttribute('data-lucide', state.theme === 'dark' ? 'sun' : 'moon');
-            lucide.createIcons();
-            localStorage.setItem('kknku_theme', state.theme);
-        }
-
-        document.getElementById('btn-theme').addEventListener('click', () => {
-            state.theme = state.theme === 'light' ? 'dark' : 'light';
-            applyTheme();
-        });
-
-        function switchTab(tab) {
-            state.activeTab = tab;
-            ['notes', 'tasks', 'agenda', 'templates'].forEach(t => {
-                const btn = document.getElementById(`tab-${t}`);
-                if(t === tab) {
-                    btn.classList.replace('text-slate-400', 'text-blue-600');
-                    btn.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
-                    btn.querySelector('.nav-icon').classList.replace('stroke-2', 'stroke-[2.5]');
-                } else {
-                    btn.classList.replace('text-blue-600', 'text-slate-400');
-                    btn.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
-                    btn.querySelector('.nav-icon').classList.replace('stroke-[2.5]', 'stroke-2');
-                }
-            });
-            renderContent();
-        }
-
-        // ================= VIRTUALIZATION ENGINE =================
-        let virtualStore = {};
-        let itemObserver = null;
-
-        function renderContent() {
-            if (itemObserver) itemObserver.disconnect();
-            virtualStore = {};
+            <!-- Banner Toko (Aman dari salah pencet) -->
+            <div class="shop-banner" id="shopNameDisplay">TOKO DAENG</div>
             
-            itemObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const el = entry.target;
-                    if (entry.isIntersecting) {
-                        if (el.innerHTML === '') {
-                            el.innerHTML = virtualStore[el.id];
-                            lucide.createIcons({ root: el });
-                            void el.offsetWidth;
-                            el.firstElementChild.classList.add('animate-in');
-                        }
-                        el.style.minHeight = 'auto'; 
-                    } else {
-                        if (el.innerHTML !== '') {
-                            el.style.minHeight = el.getBoundingClientRect().height + 'px';
-                            el.innerHTML = ''; 
-                        }
-                    }
-                });
-            }, { rootMargin: '50% 0px' });
+            <h2 class="header-toggle">
+                <span>📏 MANAJEMEN SATUAN</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn-edit-small" onclick="requestShopNameEdit()">EDIT TOKO</button>
+                    <span id="unitToggleIcon" class="toggle-btn-std" onclick="toggleUI('unitContent', 'unitToggleIcon')">TUTUP [-]</span>
+                </div>
+            </h2>
+            <div class="panel-wrapper" id="unitContent">
+                <div class="panel-content">
+                    <div class="panel-inner" style="border-bottom: 2px dashed var(--border); margin-bottom: 15px;">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="unitName" placeholder="Ketik Kg, Ons..." style="text-transform: capitalize;">
+                            <button class="btn-primary" onclick="addUnit()" style="width: 120px; font-size: 1rem;">TAMBAH</button>
+                        </div>
+                        <div id="unitTags" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                    </div>
+                </div>
+            </div>
 
-            const container = document.getElementById('content-area');
-            let html = '';
-
-            if (state.activeTab === 'notes') {
-                html += `<div class="flex justify-between items-end mb-4 px-1"><h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Arsip Notulensi</h2><span class="text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-md">${state.notes.length} Dokumen</span></div><div class="space-y-3">`;
-                if (state.notes.length === 0) html += `<p class="text-center text-slate-400 mt-10 text-sm">Arsip kosong.</p>`;
-                state.notes.forEach(note => {
-                    const vId = 'vitem-' + note.id;
-                    virtualStore[vId] = `
-                        <div class="relative w-full text-left p-4 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-blue-400 transition-all group block">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500 rounded-l-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div onclick="openViewer('${note.id}')" class="cursor-pointer pr-10">
-                                <h3 class="font-bold text-slate-900 dark:text-white mb-1.5 line-clamp-1">${note.title}</h3>
-                                <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">${note.content.replace(/[*_~#\`]/g, '')}</p>
-                                <div class="flex justify-between text-[11px] font-bold text-slate-400 uppercase">
-                                    <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3 h-3"></i> ${new Date(note.date).toLocaleDateString('id-ID')}</span>
-                                    <span class="text-blue-500">Buka <i data-lucide="chevron-right" class="w-3 h-3 inline"></i></span>
-                                </div>
+            <h2 class="header-toggle" onclick="toggleUI('dbContent', 'dbToggleIcon')">
+                <span>📦 DATABASE BARANG</span>
+                <span id="dbToggleIcon" class="toggle-btn-std">TUTUP [-]</span>
+            </h2>
+            <div class="panel-wrapper" id="dbContent">
+                <div class="panel-content">
+                    <div class="panel-inner">
+                        <div class="form-group">
+                            <input type="text" id="itemName" placeholder="Nama Barang (Cth: Beras)" style="text-transform: capitalize;">
+                            <small style="color: var(--success); font-weight: bold; margin-top: 5px; display: block;">*Ketik nama yang sama otomatis Update Harga</small>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <input type="text" id="itemPrice" inputmode="numeric" placeholder="Harga/Satuan (Rp)" style="flex: 2;" oninput="formatRupiahUI(this)">
+                            
+                            <!-- Pengganti Select Bawaan HP (Custom Select) -->
+                            <div id="itemUnitDisplay" class="custom-select" style="flex: 1;" onclick="openUnitSelectModal()">
+                                <span id="itemUnitText">KG</span>
+                                <span>▼</span>
                             </div>
-                            <button onclick="event.stopPropagation(); triggerDelete('${note.id}', 'note')" class="absolute top-3 right-3 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <input type="hidden" id="itemUnitVal" value="Kg">
                         </div>
-                    `;
-                    html += `<div id="${vId}" class="observe-item w-full transition-all"></div>`;
-                });
-                html += `</div>`;
-            } 
-            else if (state.activeTab === 'tasks') {
-                html += `
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 px-1">Delegasi & Tugas</h2>
-                    <form id="form-task" class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3 mb-4">
-                        <input id="input-task-text" required placeholder="Tindak lanjut rapat..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm outline-none text-slate-900 dark:text-white" />
-                        <div class="flex gap-2">
-                            <input id="input-task-pic" required placeholder="Nama PIC" class="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm outline-none text-slate-900 dark:text-white" />
-                            <button type="submit" class="bg-blue-600 text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95">Tambah</button>
+                        <button class="btn-primary" onclick="addInventory()" style="margin-bottom: 20px;">SIMPAN BARANG</button>
+
+                        <input type="text" id="searchInventoryInput" placeholder="🔍 Cari / Saring Tabel..." style="border-color: var(--accent); margin-bottom: 10px;">
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table>
+                                <tbody id="inventoryList"></tbody>
+                            </table>
                         </div>
-                    </form><div class="space-y-3">`;
-                state.tasks.forEach(task => {
-                    const vId = 'vitem-' + task.id;
-                    const statusClass = task.done ? 'bg-slate-50 dark:bg-slate-900/50 opacity-60' : 'bg-white dark:bg-slate-900';
-                    const iconClass = task.done ? 'text-emerald-500' : 'text-slate-300';
-                    const iconName = task.done ? 'check-square' : 'circle';
-                    const textClass = task.done ? 'line-through text-slate-500' : 'text-slate-800 dark:text-slate-200';
-                    virtualStore[vId] = `
-                        <div class="relative flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm ${statusClass} group transition-all pr-12">
-                            <button onclick="toggleTask('${task.id}')" class="${iconClass} cursor-pointer p-1 active:scale-95"><i data-lucide="${iconName}" class="w-5 h-5"></i></button>
-                            <div onclick="toggleTask('${task.id}')" class="flex-1 cursor-pointer">
-                                <p class="text-sm font-semibold mb-1 ${textClass}">${task.text}</p>
-                                <span class="text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded uppercase">PIC: ${task.pic}</span>
-                            </div>
-                            <button onclick="event.stopPropagation(); triggerDelete('${task.id}', 'task')" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    `;
-                    html += `<div id="${vId}" class="observe-item w-full transition-all"></div>`;
-                });
-                html += `</div>`;
-            }
-            else if (state.activeTab === 'agenda') {
-                html += `
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 px-1">Timeline Kegiatan</h2>
-                    <form id="form-agenda" class="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 shadow-sm flex flex-col gap-3">
-                        <input id="input-agenda-text" required placeholder="Nama Kegiatan (Misal: Senam Bersama)" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm outline-none text-slate-900 dark:text-white" />
-                        <div class="flex gap-2">
-                            <input id="input-agenda-date" type="date" required class="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm outline-none text-slate-900 dark:text-white" />
-                            <input id="input-agenda-loc" placeholder="Lokasi" class="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm outline-none text-slate-900 dark:text-white" />
-                        </div>
-                        <button type="submit" class="w-full bg-emerald-600 text-white font-bold text-sm px-4 py-2 rounded-lg active:scale-95 mt-1">Set Jadwal</button>
-                    </form>
-                    <div class="border-l-2 border-emerald-200 dark:border-emerald-900/50 ml-3 pl-4 space-y-4 mt-6">`;
-                if (state.agenda.length === 0) html += `<p class="text-slate-400 text-sm italic">Belum ada agenda diset.</p>`;
-                state.agenda.forEach(ag => {
-                    const vId = 'vitem-' + ag.id;
-                    const isDone = ag.done;
-                    const statusClass = isDone ? 'bg-slate-50 dark:bg-slate-900/50 opacity-60' : 'bg-white dark:bg-slate-900';
-                    const dotClass = isDone ? 'bg-slate-400' : 'bg-emerald-500';
-                    const textClass = isDone ? 'line-through text-slate-500' : 'text-slate-800 dark:text-slate-200';
-                    const iconName = isDone ? 'check-square' : 'circle';
-                    const iconClass = isDone ? 'text-emerald-500' : 'text-slate-300';
-                    
-                    virtualStore[vId] = `
-                        <div class="relative ${statusClass} p-4 pr-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all group">
-                            <div class="absolute -left-[23px] top-5 w-3 h-3 ${dotClass} rounded-full ring-4 ring-slate-50 dark:ring-slate-950 transition-colors"></div>
-                            <div class="flex items-start gap-3 cursor-pointer" onclick="toggleAgenda('${ag.id}')">
-                                <button class="mt-0.5 ${iconClass}"><i data-lucide="${iconName}" class="w-5 h-5"></i></button>
-                                <div class="flex-1">
-                                    <h3 class="font-bold ${textClass} transition-colors">${ag.text}</h3>
-                                    <p class="text-xs text-slate-500 font-semibold mt-1 flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-3 h-3"></i> ${new Date(ag.date).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'short'})} • ${ag.location || 'Lokasi Belum Ditentukan'}</p>
-                                </div>
-                            </div>
-                            <button onclick="event.stopPropagation(); triggerDelete('${ag.id}', 'agenda')" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors active:scale-95"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    `;
-                    html += `<div id="${vId}" class="observe-item w-full transition-all"></div>`;
-                });
-                html += `</div>`;
-            }
-            else if (state.activeTab === 'templates') {
-                html += `<div class="flex justify-between items-end mb-4 px-1"><h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">Persuratan KKN</h2><span class="text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-md">${state.templates.length} Surat</span></div><div class="space-y-3">`;
-                state.templates.forEach(template => {
-                    const vId = 'vitem-' + template.id;
-                    virtualStore[vId] = `
-                        <div class="relative w-full text-left p-4 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-blue-400 active:scale-[0.98] flex items-center pr-12 transition-all group">
-                            <div onclick="openViewer('${template.id}', true)" class="flex-1 cursor-pointer flex items-center gap-3">
-                                <div class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600"><i data-lucide="file-text" class="w-[18px] h-[18px]"></i></div>
-                                <span class="flex-1 font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-1">${template.title}</span>
-                            </div>
-                            <button onclick="event.stopPropagation(); triggerDelete('${template.id}', 'template')" class="absolute right-3 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    `;
-                    html += `<div id="${vId}" class="observe-item w-full transition-all"></div>`;
-                });
-                html += `</div>`;
-            }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            container.innerHTML = html;
-            document.querySelectorAll('.observe-item').forEach(el => itemObserver.observe(el));
-
-            if(document.getElementById('form-task')) {
-                document.getElementById('form-task').addEventListener('submit', function(e) {
-                    e.preventDefault(); addTask(document.getElementById('input-task-text').value, document.getElementById('input-task-pic').value);
-                });
-            }
-            if(document.getElementById('form-agenda')) {
-                document.getElementById('form-agenda').addEventListener('submit', function(e) {
-                    e.preventDefault(); addAgenda(document.getElementById('input-agenda-text').value, document.getElementById('input-agenda-date').value, document.getElementById('input-agenda-loc').value);
-                });
-            }
-        }
-
-        // ================= DELETE LOGIC (CUSTOM MODAL) =================
-        function triggerDelete(id, type) {
-            state.deleteTarget = { id, type };
-            document.getElementById('confirm-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            state.deleteTarget = null;
-            document.getElementById('confirm-modal').classList.add('hidden');
-        }
-
-        document.getElementById('modal-confirm-btn').addEventListener('click', () => {
-            if (!state.deleteTarget) return;
-            const { id, type } = state.deleteTarget;
-
-            if (type === 'note') state.notes = state.notes.filter(n => n.id !== id);
-            else if (type === 'task') state.tasks = state.tasks.filter(t => t.id !== id);
-            else if (type === 'agenda') state.agenda = state.agenda.filter(a => a.id !== id);
-            else if (type === 'template') state.templates = state.templates.filter(t => t.id !== id);
-
-            saveData();
-            closeModal();
-            renderContent();
-        });
-
-
-        // ================= EDITOR LOGIC =================
-        const toDatetimeLocal = (isoString) => {
-            const d = new Date(isoString);
-            const pad = (n) => n.toString().padStart(2, '0');
-            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        };
-
-        // FAB Multi-Fungsi
-        document.getElementById('btn-fab').addEventListener('click', () => {
-            if (state.activeTab === 'templates') openEditor(null, null, 'template');
-            else if (state.activeTab === 'notes') openEditor(null, null, 'note');
-            else if (state.activeTab === 'tasks') document.getElementById('input-task-text')?.focus();
-            else if (state.activeTab === 'agenda') document.getElementById('input-agenda-text')?.focus();
-        });
-
-        function openEditor(docId = null, templateData = null, type = 'note') {
-            state.editingType = type;
-            state.editingNoteId = docId;
-            state.editorUndoBuffer = ''; 
-            
-            const titleInput = document.getElementById('editor-title');
-            const contentInput = document.getElementById('editor-content');
-            const dateInput = document.getElementById('editor-date');
-            
-            if (docId) {
-                const doc = type === 'template' ? state.templates.find(t => t.id === docId) : state.notes.find(n => n.id === docId);
-                titleInput.value = doc.title;
-                contentInput.value = doc.content;
-                dateInput.value = doc.date ? toDatetimeLocal(doc.date) : toDatetimeLocal(new Date().toISOString());
-            } else if (templateData) {
-                titleInput.value = templateData.title;
-                contentInput.value = templateData.content;
-                dateInput.value = toDatetimeLocal(new Date().toISOString());
-            } else {
-                titleInput.value = '';
-                contentInput.value = '';
-                dateInput.value = toDatetimeLocal(new Date().toISOString());
-            }
-
-            document.getElementById('editor-type-label').textContent = type === 'template' ? 'Editor Surat' : 'Editor Arsip';
-            renderQuickInsertBar();
-            document.getElementById('view-editor').classList.remove('hidden');
-        }
-
-        function renderQuickInsertBar() {
-            const qib = document.getElementById('quick-insert-bar');
-            qib.innerHTML = '';
-            
-            QUICK_INSERT_TEXTS.forEach((item) => {
-                const btn = document.createElement('button');
-                btn.type = 'button'; 
-                btn.className = item.label === 'Poin' 
-                    ? "flex-shrink-0 flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-bold active:scale-95 shadow-sm"
-                    : "flex-shrink-0 flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-lg text-sm font-bold active:scale-95 shadow-sm";
-                btn.innerHTML = `<i data-lucide="${item.icon}" class="w-4 h-4"></i> ${item.label}`;
+    <!-- Sisi KANAN: Kasir, Kalkulator & Keranjang -->
+    <div class="panel">
+        <h2 style="color: var(--success); border-bottom: 3px solid var(--success);">🛒 MEJA KASIR UTAMA</h2>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-start;">
+            <div class="form-group search-container" style="flex: 2; margin-bottom: 0;">
+                <label>Cari & Pilih Barang</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="searchInput" placeholder="Ketik nama barang..." autocomplete="off" style="border-color: var(--success); border-width: 2px; text-transform: capitalize;">
+                </div>
+                <!-- Dropdown Pencarian -->
+                <div id="searchResults"></div>
                 
-                btn.onclick = () => insertToEditor(item.text);
+                <input type="hidden" id="selectedItemName">
+                <input type="hidden" id="selectedItemPrice">
+                <input type="hidden" id="selectedItemUnit">
+            </div>
+
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <label>Qty / Kuantitas</label>
+                <input type="text" id="itemQty" inputmode="decimal" value="1" style="border-color: var(--primary); border-width: 2px; text-align: center; font-size: 1.4rem; font-weight: 900;">
                 
-                qib.appendChild(btn);
-            });
+                <!-- Quick Qty Bullets -->
+                <div style="display: flex; gap: 5px; margin-top: 8px;">
+                    <button class="btn-thumb" style="background:var(--border); color:var(--primary); padding:8px; flex:1;" onclick="setQuickQty(1)">1</button>
+                    <button class="btn-thumb" style="background:var(--border); color:var(--primary); padding:8px; flex:1;" onclick="setQuickQty(0.5)">0.5</button>
+                    <button class="btn-thumb" style="background:var(--border); color:var(--primary); padding:8px; flex:1;" onclick="setQuickQty(0.1)">0.1</button>
+                </div>
+            </div>
+        </div>
 
-            const divider = document.createElement('div');
-            divider.className = "w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1 flex-shrink-0";
-            qib.appendChild(divider);
+        <!-- Box Timbangan Eceran (PERMANEN MUNCUL & KOMPAK) -->
+        <div id="scaleHelper" class="nominal-box">
+            <div class="nominal-title">💡 Beli Berdasarkan Uang Eceran</div>
+            <div class="scale-input-row">
+                <!-- Input KHUSUS nominal eceran -->
+                <input type="text" id="nominalInput" inputmode="numeric" placeholder="Ketik uang (Rp)..." class="scale-input" oninput="formatRupiahUI(this); calculateScaleFromInput();">
+                <div class="scale-info">
+                    <span>Setara: <span class="badge" style="background: yellow; color: var(--danger); font-size: 1.1rem; padding: 2px 6px;" id="scaleResultVal">0</span> <span id="scaleResultUnit">Kg</span></span>
+                    <span id="scaleResultDesc" style="color: var(--danger);">Timbangan: 0 Ons 0 Garis</span>
+                </div>
+            </div>
+        </div>
 
-            const btnUndo = document.createElement('button');
-            btnUndo.type = 'button';
-            btnUndo.id = 'btn-editor-undo';
-            btnUndo.className = "hidden flex-shrink-0 flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-lg text-sm font-bold active:scale-95 shadow-sm";
-            btnUndo.innerHTML = `<i data-lucide="undo-2" class="w-4 h-4"></i> Batal Hapus`;
-            btnUndo.onclick = restoreEditorContent;
-            qib.appendChild(btnUndo);
+        <button class="btn-success" onclick="addToCart()" style="padding: 18px; font-size: 1.25rem; margin-bottom: 15px;">(ENTER) MASUKKAN KERANJANG</button>
 
-            const btnClear = document.createElement('button');
-            btnClear.type = 'button';
-            btnClear.className = "flex-shrink-0 flex items-center gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 px-4 py-2 rounded-lg text-sm font-bold active:scale-95 shadow-sm";
-            btnClear.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua`;
-            btnClear.onclick = clearEditorContent;
-            qib.appendChild(btnClear);
-
-            lucide.createIcons({ root: qib });
-        }
-
-        function insertToEditor(text) {
-            const textarea = document.getElementById('editor-content');
-            textarea.focus(); 
-            const start = textarea.selectionStart !== null ? textarea.selectionStart : textarea.value.length;
-            const end = textarea.selectionEnd !== null ? textarea.selectionEnd : textarea.value.length;
-            const current = textarea.value;
-            textarea.value = current.substring(0, start) + text + current.substring(end);
-            textarea.selectionStart = textarea.selectionEnd = start + text.length;
-            textarea.focus();
-        }
-
-        function clearEditorContent() {
-            const textarea = document.getElementById('editor-content');
-            if(!textarea.value.trim()) return;
-            state.editorUndoBuffer = textarea.value;
-            textarea.value = '';
-            document.getElementById('btn-editor-undo').classList.remove('hidden');
-        }
-
-        function restoreEditorContent() {
-            if(!state.editorUndoBuffer) return;
-            const textarea = document.getElementById('editor-content');
-            textarea.value = state.editorUndoBuffer;
-            state.editorUndoBuffer = '';
-            document.getElementById('btn-editor-undo').classList.add('hidden');
-            textarea.focus();
-        }
-
-        function closeEditor() { document.getElementById('view-editor').classList.add('hidden'); }
-
-        function saveNote() {
-            const title = document.getElementById('editor-title').value.trim();
-            const content = document.getElementById('editor-content').value.trim();
-            const dateInput = document.getElementById('editor-date').value;
+        <!-- Kalkulator Sat-Set Custom -->
+        <div class="calc-container">
+            <div id="calcDisplay" class="calc-display">0</div>
             
-            if (!title && !content) return closeEditor();
+            <div class="calc-btn clear" onclick="calcAction('C')">C</div>
+            <div class="calc-btn op" onclick="calcAction('DEL')">DEL</div>
+            <div class="calc-btn op" onclick="calcAction(':')">:</div>
+            <div class="calc-btn op" onclick="calcAction('X')">X</div>
+            
+            <div class="calc-btn" onclick="calcAction('7')">7</div>
+            <div class="calc-btn" onclick="calcAction('8')">8</div>
+            <div class="calc-btn" onclick="calcAction('9')">9</div>
+            <div class="calc-btn op" onclick="calcAction('-')">-</div>
+            
+            <div class="calc-btn" onclick="calcAction('4')">4</div>
+            <div class="calc-btn" onclick="calcAction('5')">5</div>
+            <div class="calc-btn" onclick="calcAction('6')">6</div>
+            <div class="calc-btn plus-btn" onclick="calcAction('+')">+</div>
+            
+            <div class="calc-btn" onclick="calcAction('1')">1</div>
+            <div class="calc-btn" onclick="calcAction('2')">2</div>
+            <div class="calc-btn" onclick="calcAction('3')">3</div>
+            
+            <!-- Baris Bawah Rata -->
+            <div class="calc-btn" onclick="calcAction('0')">0</div>
+            <div class="calc-btn" onclick="calcAction('00')">00</div>
+            <div class="calc-btn" onclick="calcAction('000')">000</div>
+            <div class="calc-btn" style="font-size: 2.5rem;" onclick="calcAction('.')">.</div>
+            
+            <div class="calc-btn eq-btn" onclick="calcAction('=')">=</div>
+        </div>
 
-            const newDoc = {
-                id: state.editingNoteId || Date.now().toString(),
-                title: title || (state.editingType === 'template' ? 'Surat Baru' : 'Notulensi / Dokumen'),
-                content: content,
-                date: dateInput ? new Date(dateInput).toISOString() : new Date().toISOString()
-            };
+        <div class="table-responsive" style="margin-top: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Item</th>
+                        <th style="width: 30%; text-align: center;">Qty</th>
+                        <th style="width: 25%;">Subtotal</th>
+                        <th style="width: 10%; text-align: center;">Hapus</th>
+                    </tr>
+                </thead>
+                <tbody id="cartList"></tbody>
+            </table>
+        </div>
 
-            if (state.editingType === 'template') {
-                if (state.editingNoteId) {
-                    const idx = state.templates.findIndex(t => t.id === state.editingNoteId);
-                    state.templates[idx] = newDoc;
-                } else {
-                    state.templates.unshift(newDoc);
+        <!-- Lanjutan Area Total & Checkout -->
+        <div class="totals" style="margin-top: 15px; padding-top: 20px; border-top: 2px dashed var(--border);">
+            <div style="display: flex; justify-content: space-between; font-size: 1.4rem; font-weight: 900; margin-bottom: 15px;">
+                <span>Total Belanja:</span>
+                <span id="grandTotal" data-val="0" style="color: var(--primary);">Rp 0</span>
+            </div>
+            
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Uang Diterima dari Pembeli (Rp)</label>
+                <!-- Font raksasa biar kasir gak salah lihat nominal -->
+                <input type="text" id="cashInput" inputmode="numeric" placeholder="Cth: 50.000" oninput="formatRupiahUI(this); calculateChange();" style="font-size: 2.5rem; font-weight: 900; color: var(--success); padding: 20px; text-align: right; letter-spacing: 2px;">
+            </div>
+            
+            <!-- HIGHLIGHT KOTAK KEMBALIAN (Kontras & Raksasa) -->
+            <div id="changeDisplayBox" class="change-display-container">
+                <div class="change-label" id="changeLabelText">Status / Kembalian</div>
+                <div class="change-value" id="changeDue">Rp 0</div>
+            </div>
+
+            <!-- Bagian Piutang (Otomatis Muncul Kalau Uang Kurang) -->
+            <div id="debtSection" style="display: none; background: #fff3cd; padding: 20px; border-left: 6px solid var(--warning); margin-top: 20px; border-radius: 8px;">
+                <label style="color: #d35400; font-size: 1.15rem;">⚠️ Uang Kurang! Catat Nama Pelanggan (Piutang):</label>
+                <input type="text" id="debtorName" placeholder="Ketik nama pelanggan..." style="border-color: var(--warning); padding: 18px; font-size: 1.25rem; font-weight: 900; text-transform: capitalize;">
+            </div>
+        </div>
+        
+        <button class="btn-primary" onclick="processTransaction()" style="margin-top: 20px; padding: 25px; font-size: 1.5rem; box-shadow: 0 6px 0 #111;">(ENTER) SELESAIKAN TRANSAKSI</button>
+    </div>
+    <!-- Akhir Panel Kanan (Meja Kasir) -->
+
+    <!-- Panel Bawah 1: BUKU PIUTANG -->
+    <div class="panel full-width">
+        <h2 class="header-toggle" onclick="toggleUI('debtContent', 'debtToggleIcon')">
+            <span>📒 BUKU PIUTANG DAGANG</span>
+            <span id="debtToggleIcon" class="toggle-btn-std">TUTUP [-]</span>
+        </h2>
+        <div class="panel-wrapper" id="debtContent">
+            <div class="panel-content">
+                <div class="panel-inner">
+                    <input type="text" id="searchDebtInput" placeholder="🔍 Saring nama penghutang..." oninput="renderDebts()" style="margin-bottom: 15px; border-color: var(--warning);">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Tanggal</th>
+                                    <th style="width: 35%;">Nama Pelanggan</th>
+                                    <th style="width: 25%;">Hutang</th>
+                                    <th style="width: 20%; text-align: center;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="debtList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Bawah 2: DASBOR & RIWAYAT -->
+    <div class="panel full-width">
+        <h2 class="header-toggle" onclick="toggleUI('historyContent', 'historyToggleIcon')">
+            <span>📜 DASBOR & RIWAYAT SESI</span>
+            <span id="historyToggleIcon" class="toggle-btn-std">TUTUP [-]</span>
+        </h2>
+        <div class="panel-wrapper" id="historyContent">
+            <div class="panel-content">
+                <div class="panel-inner">
+                    <!-- Dasbor Aesthetic (Grid Seragam) -->
+                    <div class="dash-grid">
+                        <div class="dash-box" style="background: var(--primary);">
+                            <span>OMZET SESI INI</span>
+                            <strong id="dailyOmzet">Rp 0</strong>
+                        </div>
+                        <div class="dash-box" style="background: var(--success);">
+                            <span>TUNAI MASUK</span>
+                            <strong id="dailyCash">Rp 0</strong>
+                        </div>
+                        <div class="dash-box" style="background: var(--danger);">
+                            <span>PIUTANG BARU</span>
+                            <strong id="dailyDebt">Rp 0</strong>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <button class="btn-danger" style="padding: 18px; font-size: 1.1rem;" onclick="customConfirm('Hapus Riwayat?', 'Seluruh riwayat transaksi di sesi ini akan dihapus permanen. Lanjutkan?', clearHistory)">🗑️ HAPUS RIWAYAT SESI</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Waktu</th>
+                                    <th style="width: 35%;">Detail Pembelian</th>
+                                    <th style="width: 25%;">Total & Tunai</th>
+                                    <th style="width: 15%; text-align: center;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- Akhir Grid Body Custom -->
+
+<!-- SCRIPT MESIN UTAMA -->
+<script>
+    // ==========================================
+    // BAGIAN 4: ENGINE LOGIKA, KALKULATOR & STATE
+    // ==========================================
+
+    const APP_VERSION = "2.8"; 
+    let shopName = localStorage.getItem('pos_shop_name') || 'TOKO DAENG';
+    let units = JSON.parse(localStorage.getItem('pos_units')) || ['Kg', 'Ons', 'Liter', 'Pcs', 'Bks'];
+    let inventory = JSON.parse(localStorage.getItem('pos_inventory')) || [];
+    let debts = JSON.parse(localStorage.getItem('pos_debts')) || [];
+    let historyLog = JSON.parse(localStorage.getItem('pos_history')) || [];
+    let cart = [];
+    let manualItemCounter = 1;
+
+    // --- UTILITIES & FORMATTER ---
+    const formatRp = (n) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(n);
+    const parseRp = (s) => parseFloat(s.toString().replace(/\./g, '').replace(/[^0-9]/g, '')) || 0;
+    
+    function formatRupiahUI(el) {
+        let val = el.value.replace(/[^0-9]/g, '');
+        el.value = val ? formatRp(val) : '';
+    }
+
+    function toggleUI(c, i) { 
+        const el = document.getElementById(c); 
+        el.classList.toggle('collapsed');
+        document.getElementById(i).innerText = el.classList.contains('collapsed') ? "BUKA [+]" : "TUTUP [-]";
+    }
+
+    // --- CUSTOM MODALS 100% BEBAS POPUP BAWAAN ---
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function customAlert(title, message) {
+        document.getElementById('alertTitle').innerText = title;
+        document.getElementById('alertMsg').innerText = message;
+        document.getElementById('customAlert').classList.add('active');
+    }
+
+    function customConfirm(title, message, actionCallback) {
+        document.getElementById('confirmTitle').innerText = title;
+        document.getElementById('confirmMsg').innerText = message;
+        document.getElementById('customConfirm').classList.add('active');
+        
+        const btnYes = document.getElementById('confirmBtnYes');
+        const newBtnYes = btnYes.cloneNode(true); 
+        btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+        
+        newBtnYes.addEventListener('click', () => {
+            closeModal('customConfirm');
+            if(actionCallback) actionCallback();
+        });
+    }
+
+    function customPrompt(title, message, defaultVal, actionCallback) {
+        document.getElementById('promptTitle').innerText = title;
+        document.getElementById('promptMsg').innerText = message;
+        const input = document.getElementById('promptInput');
+        input.value = defaultVal || '';
+        document.getElementById('customPrompt').classList.add('active');
+        setTimeout(() => input.focus(), 100);
+        
+        const btnSave = document.getElementById('promptBtnSave');
+        const newBtnSave = btnSave.cloneNode(true);
+        btnSave.parentNode.replaceChild(newBtnSave, btnSave);
+        
+        newBtnSave.addEventListener('click', () => {
+            let val = document.getElementById('promptInput').value.trim();
+            closeModal('customPrompt');
+            if(actionCallback && val) actionCallback(val);
+        });
+    }
+
+    function showToast(msg, type = 'success') {
+        const box = document.getElementById('toastBox');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.innerText = msg;
+        box.appendChild(t);
+        setTimeout(() => t.classList.add('show'), 10);
+        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
+    }
+
+    // --- CUSTOM SELECT SATUAN (Pengganti tag <select>) ---
+    function openUnitSelectModal() {
+        const container = document.getElementById('unitSelectContainer');
+        container.innerHTML = units.map(u => `
+            <div class="unit-option-btn" onclick="selectUnitOption('${u}')">${u}</div>
+        `).join('');
+        document.getElementById('unitSelectModal').classList.add('active');
+    }
+
+    function selectUnitOption(selectedUnit) {
+        document.getElementById('itemUnitVal').value = selectedUnit;
+        document.getElementById('itemUnitText').innerText = selectedUnit;
+        closeModal('unitSelectModal');
+    }
+
+    // --- MANAJEMEN SATUAN ---
+    function addUnit() {
+        const u = document.getElementById('unitName').value.trim();
+        if(!u) return;
+        const isExist = units.some(unit => unit.toLowerCase() === u.toLowerCase());
+        if(isExist) return customAlert("Gagal", "Satuan tersebut sudah ada!"); 
+        
+        units.push(u); 
+        localStorage.setItem('pos_units', JSON.stringify(units)); 
+        renderUnits(); 
+        document.getElementById('unitName').value = ''; 
+        showToast("Satuan ditambahkan");
+    }
+
+    function deleteUnit(unitName) {
+        units = units.filter(u => u !== unitName);
+        localStorage.setItem('pos_units', JSON.stringify(units));
+        renderUnits();
+        
+        // Reset custom select jika satuan yang dihapus sedang terpilih
+        if(document.getElementById('itemUnitVal').value === unitName) {
+            document.getElementById('itemUnitVal').value = units[0] || '';
+            document.getElementById('itemUnitText').innerText = units[0] || 'PILIH';
+        }
+        showToast("Satuan dihapus");
+    }
+
+    function renderUnits() {
+        document.getElementById('unitTags').innerHTML = units.map(u => `
+            <div class="unit-tag">
+                ${u} <span onclick="customConfirm('Hapus Satuan?', 'Yakin hapus satuan ${u}?', () => deleteUnit('${u}'))">X</span>
+            </div>
+        `).join('');
+    }
+
+    // --- MANAJEMEN DATABASE BARANG ---
+    function addInventory() {
+        const name = document.getElementById('itemName').value.trim();
+        const price = parseRp(document.getElementById('itemPrice').value);
+        const unit = document.getElementById('itemUnitVal').value; // Ambil dari input hidden custom select
+        
+        if (!name || price <= 0) return customAlert("Error", "Nama dan Harga wajib diisi!");
+        
+        const existingItem = inventory.find(x => x.name.toLowerCase() === name.toLowerCase());
+        
+        if(existingItem) {
+            existingItem.price = price;
+            existingItem.unit = unit; 
+            showToast(`Harga ${existingItem.name} di-update!`);
+        } else {
+            inventory.push({ id: Date.now(), name: name, price: price, unit: unit });
+            showToast("Barang baru masuk Database!");
+        }
+        
+        localStorage.setItem('pos_inventory', JSON.stringify(inventory));
+        renderInventory();
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemPrice').value = '';
+    }
+
+    function renderInventory() {
+        const q = document.getElementById('searchInventoryInput').value.toLowerCase();
+        const list = inventory.filter(x => x.name.toLowerCase().includes(q));
+        
+        document.getElementById('inventoryList').innerHTML = list.map(i => `
+            <tr>
+                <td><b style="font-size:1.1rem; text-transform: capitalize;">${i.name}</b></td>
+                <td style="font-weight:700;">Rp ${formatRp(i.price)}</td>
+                <td><span class="badge" style="background: var(--accent);">${i.unit}</span></td>
+                <td class="action-cell">
+                    <button class="btn-primary" style="padding: 8px; width: auto; font-size: 0.8rem;" onclick="editItemPrice(${i.id})">EDIT</button>
+                    <button class="btn-danger" style="padding: 8px; width: auto; font-size: 0.8rem;" onclick="customConfirm('Hapus Barang?', 'Yakin hapus ${i.name}?', () => deleteInventory(${i.id}))">HAPUS</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function deleteInventory(id) {
+        inventory = inventory.filter(x => x.id !== id);
+        localStorage.setItem('pos_inventory', JSON.stringify(inventory));
+        renderInventory();
+        showToast("Barang terhapus", "error");
+    }
+
+    function editItemPrice(id) {
+        const item = inventory.find(x => x.id === id);
+        if(!item) return;
+        customPrompt('Edit Harga', `Harga baru untuk ${item.name}:`, formatRp(item.price), (newVal) => {
+            const newPrice = parseRp(newVal);
+            if(newPrice > 0) {
+                item.price = newPrice;
+                localStorage.setItem('pos_inventory', JSON.stringify(inventory));
+                renderInventory();
+                showToast(`Harga ${item.name} berhasil diubah!`);
+            }
+        });
+    }
+
+    document.getElementById('searchInventoryInput').addEventListener('input', renderInventory);
+
+    // --- PENCARIAN & TIMBANGAN ECERAN CERDAS ---
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
+    const nominalInput = document.getElementById('nominalInput');
+
+    function setQuickQty(val) {
+        document.getElementById('itemQty').value = val;
+    }
+
+    searchInput.addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        
+        if (q.length < 1) { 
+            searchResults.style.display = 'none'; 
+            resetSelection();
+            return; 
+        }
+
+        const list = inventory.filter(i => i.name.toLowerCase().includes(q));
+        
+        // Highlight Blok Hijau Dropdown
+        searchResults.innerHTML = list.map(i => {
+            const regex = new RegExp(`(${q})`, 'gi');
+            const highlightedName = i.name.replace(regex, `<span style="background: rgba(46, 204, 113, 0.4); color: #111; border-radius: 3px; padding: 0 2px;">$1</span>`);
+            
+            return `
+            <div class="search-item" onclick="selectItem('${i.name.replace(/'/g, "\\'")}', ${i.price}, '${i.unit}')">
+                <span style="text-transform: capitalize;">${highlightedName}</span> 
+                <span style="color:var(--success);">Rp ${formatRp(i.price)}/${i.unit}</span>
+            </div>
+            `;
+        }).join('');
+        
+        searchResults.style.display = list.length > 0 ? 'block' : 'none';
+    });
+
+    function selectItem(name, price, unit) {
+        document.getElementById('searchInput').value = name; 
+        document.getElementById('selectedItemName').value = name;
+        document.getElementById('selectedItemPrice').value = price;
+        document.getElementById('selectedItemUnit').value = unit;
+        
+        searchResults.style.display = 'none';
+        
+        document.getElementById('scaleResultVal').innerText = `0`;
+        document.getElementById('scaleResultUnit').innerText = unit;
+        document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`;
+        
+        nominalInput.value = '';
+        nominalInput.focus(); 
+    }
+
+    function resetSelection() {
+        document.getElementById('selectedItemName').value = '';
+        document.getElementById('selectedItemPrice').value = '';
+        document.getElementById('selectedItemUnit').value = '';
+        document.getElementById('itemQty').value = '1';
+        document.getElementById('searchInput').value = '';
+        
+        document.getElementById('scaleResultVal').innerText = `0`;
+        document.getElementById('scaleResultUnit').innerText = 'Kg';
+        document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`;
+        nominalInput.value = '';
+    }
+
+    // Input Uang Eceran (Logika Presisi X Ons Y Garis)
+    function calculateScaleFromInput() {
+        const nominal = parseRp(nominalInput.value);
+        const pricePerUnit = parseFloat(document.getElementById('selectedItemPrice').value) || 0;
+        const unit = document.getElementById('selectedItemUnit').value;
+
+        if (pricePerUnit <= 0 || nominal <= 0) {
+            document.getElementById('itemQty').value = '1';
+            document.getElementById('scaleResultVal').innerText = '0';
+            document.getElementById('scaleResultDesc').innerText = `Timbangan: 0 Ons 0 Garis`;
+            return;
+        }
+
+        if (unit.toLowerCase() !== 'kg') {
+            const qty = nominal / pricePerUnit;
+            document.getElementById('itemQty').value = qty.toFixed(2);
+            document.getElementById('scaleResultVal').innerText = qty.toFixed(2);
+            document.getElementById('scaleResultUnit').innerText = unit;
+            document.getElementById('scaleResultDesc').innerText = `Satuan Non-Timbangan`;
+            return;
+        }
+
+        // 1 Kg = 10 Ons | 1 Ons = 100 gram | 1 Garis = 10 gram
+        const qtyKg = nominal / pricePerUnit;
+        const totalGrams = qtyKg * 1000;
+        
+        let ons = Math.floor(totalGrams / 100);
+        let sisaGrams = totalGrams % 100;
+        let garis = Math.round(sisaGrams / 10);
+        
+        if(garis >= 10) {
+            ons += 1;
+            garis = 0;
+        }
+        
+        document.getElementById('itemQty').value = qtyKg.toFixed(3);
+        document.getElementById('scaleResultVal').innerText = qtyKg.toFixed(3);
+        document.getElementById('scaleResultUnit').innerText = 'Kg';
+        document.getElementById('scaleResultDesc').innerText = `Timbangan: ${ons} Ons ${garis} Garis`;
+    }
+
+    // --- KALKULATOR KASIR CERDAS (AUTO-TITIK) ---
+    let calcRaw = '0'; 
+
+    function formatCalcDisplay(rawStr) {
+        let parts = rawStr.split(/([*/+\-])/);
+        for(let i=0; i<parts.length; i++) {
+            if(!['*', '/', '+', '-'].includes(parts[i]) && parts[i] !== '') {
+                if(!parts[i].includes('.')) {
+                    parts[i] = formatRp(parseInt(parts[i]));
                 }
+            } else if (parts[i] === '*') {
+                parts[i] = ' X ';
+            } else if (parts[i] === '/') {
+                parts[i] = ' : ';
             } else {
-                if (state.editingNoteId) {
-                    const idx = state.notes.findIndex(n => n.id === state.editingNoteId);
-                    state.notes[idx] = newDoc;
-                } else {
-                    state.notes.unshift(newDoc);
-                }
-            }
-
-            saveData();
-            closeEditor();
-            renderContent();
-            openViewer(newDoc.id, state.editingType === 'template');
-        }
-
-        // ================= VIEWER LOGIC & SHARE API =================
-        function openViewer(docId, isTemplate = false) {
-            state.viewingDoc = isTemplate ? state.templates.find(t => t.id === docId) : state.notes.find(n => n.id === docId);
-            state.viewingDoc.isTemplate = isTemplate; // flag temp
-            
-            document.getElementById('viewer-type-label').textContent = isTemplate ? 'Template Surat' : 'Arsip Dokumen';
-            document.getElementById('viewer-title').textContent = state.viewingDoc.title;
-            document.getElementById('viewer-date').textContent = isTemplate ? '' : new Date(state.viewingDoc.date).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
-            
-            const contentEl = document.getElementById('viewer-content');
-            contentEl.textContent = state.viewingDoc.content; 
-            if (isTemplate) contentEl.classList.add('font-mono', 'text-sm');
-            else contentEl.classList.remove('font-mono', 'text-sm');
-
-            const btnScript = document.getElementById('btn-script-filter');
-            const btnUseTemplate = document.getElementById('btn-use-template');
-            
-            if (isTemplate) {
-                btnScript.classList.add('hidden');
-                btnUseTemplate.classList.remove('hidden');
-            } else {
-                btnScript.classList.remove('hidden');
-                btnUseTemplate.classList.add('hidden');
-            }
-
-            const btnCopy = document.getElementById('btn-copy');
-            btnCopy.className = 'flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold transition-all bg-blue-600 text-white';
-            btnCopy.querySelector('.text-copy').textContent = 'Salin';
-            btnCopy.querySelector('.icon-copy').setAttribute('data-lucide', 'copy');
-            
-            lucide.createIcons();
-            document.getElementById('view-viewer').classList.remove('hidden');
-        }
-
-        function closeViewer() {
-            document.getElementById('view-viewer').classList.add('hidden');
-            renderContent();
-        }
-
-        function useTemplate() {
-            if (!state.viewingDoc) return;
-            closeViewer();
-            openEditor(null, state.viewingDoc, 'note');
-        }
-
-        function editCurrentNote() {
-            if (!state.viewingDoc) return;
-            closeViewer();
-            openEditor(state.viewingDoc.id, null, state.viewingDoc.isTemplate ? 'template' : 'note');
-        }
-
-        function shareDoc() {
-            if (!state.viewingDoc) return;
-            const cleanText = `${state.viewingDoc.title.replace(/[*_~#\`]/g, '')}\n\n${state.viewingDoc.content.replace(/[*_~#\`]/g, '')}`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: state.viewingDoc.title,
-                    text: cleanText,
-                }).catch(console.error);
-            } else {
-                copyViewerText();
-                alert("Browser Anda tidak mendukung fitur share. Teks telah disalin ke clipboard.");
+                parts[i] = ` ${parts[i]} `;
             }
         }
+        return parts.join('').trim();
+    }
 
-        function copyViewerText() {
-            if (!state.viewingDoc) return;
-            const cleanText = `${state.viewingDoc.title.replace(/[*_~#\`]/g, '')}\n\n${state.viewingDoc.content.replace(/[*_~#\`]/g, '')}`;
-
-            const ta = document.createElement("textarea");
-            ta.value = cleanText;
-            document.body.appendChild(ta);
-            ta.select();
+    function calcAction(action) {
+        const display = document.getElementById('calcDisplay');
+        
+        if (action === 'C') {
+            calcRaw = '0';
+        } else if (action === 'DEL') {
+            calcRaw = calcRaw.length > 1 ? calcRaw.slice(0, -1) : '0';
+        } else if (action === '=') {
+            try { 
+                let res = eval(calcRaw); 
+                calcRaw = Number.isInteger(res) ? res.toString() : res.toFixed(2).toString();
+            } catch { 
+                calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000); 
+            }
+        } else if (action === '+') {
             try {
-                document.execCommand('copy');
-                const btnCopy = document.getElementById('btn-copy');
-                btnCopy.className = 'flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold transition-all bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400';
-                btnCopy.querySelector('.text-copy').textContent = 'Tersalin';
-                btnCopy.querySelector('.icon-copy').setAttribute('data-lucide', 'check');
-                lucide.createIcons();
-                setTimeout(() => {
-                    btnCopy.className = 'flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold transition-all bg-blue-600 text-white';
-                    btnCopy.querySelector('.text-copy').textContent = 'Salin';
-                    btnCopy.querySelector('.icon-copy').setAttribute('data-lucide', 'copy');
-                    lucide.createIcons();
-                }, 2000);
-            } catch (err) {}
-            document.body.removeChild(ta);
+                let res = eval(calcRaw);
+                if (res > 0) {
+                    cart.push({ id: Date.now(), name: `Barang Manual ${manualItemCounter}`, price: res, qty: 1, unit: 'Ls', subtotal: res, isManual: true });
+                    manualItemCounter++;
+                    renderCart();
+                    showToast(`Masuk Keranjang: Rp ${formatRp(res)}`);
+                }
+                calcRaw = '0'; 
+            } catch {
+                calcRaw = 'Err'; setTimeout(() => { calcRaw = '0'; display.innerText = '0'; }, 1000);
+            }
+        } else {
+            let sysAction = action;
+            if (action === 'X') sysAction = '*';
+            if (action === ':') sysAction = '/';
+
+            if (calcRaw === '0') {
+                if (['00', '000'].includes(sysAction)) return; 
+                if (sysAction === '.') calcRaw = '0.';
+                else if (['*', '/', '-'].includes(sysAction)) calcRaw = '0' + sysAction;
+                else calcRaw = sysAction;
+            } else {
+                calcRaw += sysAction;
+            }
+        }
+        
+        if(calcRaw !== 'Err') display.innerText = formatCalcDisplay(calcRaw);
+        else display.innerText = calcRaw;
+    }
+
+    // --- KERANJANG PINTAR (ANTI-SANGSUT / AUTO-BULAT) ---
+    function addToCart() {
+        let name = document.getElementById('selectedItemName').value;
+        let price = parseFloat(document.getElementById('selectedItemPrice').value);
+        let unit = document.getElementById('selectedItemUnit').value;
+        
+        let qtyInput = parseFloat(document.getElementById('itemQty').value);
+        let nominalInputVal = parseRp(document.getElementById('nominalInput').value);
+
+        if (name && price > 0) {
+            let existingItem = cart.find(x => x.name === name && !x.isManual);
+            
+            if (nominalInputVal > 0) {
+                // KASUS: INPUT PAKAI UANG ECERAN (ANTI-SANGSUT / AUTO-BULAT)
+                if (existingItem) {
+                    // Kalau barang udah ada, jumlahkan langsung UANGNYA biar bulat mutlak
+                    existingItem.subtotal += nominalInputVal;
+                    // Berat (Qty) menyesuaikan belakangan
+                    existingItem.qty = existingItem.subtotal / existingItem.price;
+                    showToast(`Jumlah uang ${name} ditambahkan mutlak!`);
+                } else {
+                    cart.push({ 
+                        id: Date.now(), name: name, price: price, 
+                        qty: nominalInputVal / price, unit: unit, 
+                        subtotal: nominalInputVal, isManual: false 
+                    });
+                    showToast(`${name} masuk keranjang!`);
+                }
+            } else {
+                // KASUS: INPUT PAKAI QTY MANUAL
+                if (existingItem) {
+                    existingItem.qty += qtyInput;
+                    existingItem.subtotal = existingItem.qty * existingItem.price;
+                    showToast(`Jumlah ${name} digabung!`);
+                } else {
+                    cart.push({ 
+                        id: Date.now(), name: name, price: price, 
+                        qty: qtyInput, unit: unit, 
+                        subtotal: price * qtyInput, isManual: false 
+                    });
+                    showToast(`${name} masuk keranjang!`);
+                }
+            }
+
+            resetSelection();
+            renderCart();
+            return;
         }
 
-        // ================= SCRIPT FILTER LOGIC =================
-        function openScriptView() {
-            if (!state.viewingDoc) return;
-            document.getElementById('script-title').textContent = state.viewingDoc.title;
+        customAlert("Gagal", "Pilih barang dari pencarian atau tekan (+) di Kalkulator untuk barang manual!");
+    }
+
+    function renderCart() {
+        let total = 0;
+        document.getElementById('cartList').innerHTML = cart.map(i => {
+            total += i.subtotal;
             
-            const lines = state.viewingDoc.content.split('\n');
-            const points = lines.filter(line => /^[•\-\*]/.test(line.trim()) || /^\d+\./.test(line.trim()));
-            const finalPoints = points.length > 0 ? points : ["(Tidak ada format poin yang terdeteksi. Silakan bacakan ringkasan secara umum)"];
+            let qtyHtml = '';
+            let priceHtml = '';
+
+            if (i.isManual) {
+                qtyHtml = `<div style="text-align:center; font-weight:bold;">1 Ls</div>`;
+                priceHtml = `<span style="font-weight:900; color:var(--primary); cursor:pointer; text-decoration:underline;" onclick="editManualPrice(${i.id}, ${i.price})">Rp ${formatRp(i.subtotal)}</span>`;
+            } else {
+                qtyHtml = `
+                    <div class="qty-updater">
+                        <button class="btn-qty" onclick="updateCartQty(${i.id}, -1)">-</button>
+                        <div class="cart-qty-val" onclick="openCartQtyModal(${i.id}, '${i.name.replace(/'/g, "\\'")}', '${i.unit}', ${i.qty})">${parseFloat(i.qty.toFixed(3))}</div>
+                        <button class="btn-qty" onclick="updateCartQty(${i.id}, 1)">+</button>
+                    </div>
+                `;
+                priceHtml = `<span style="font-weight:900; color:var(--primary);">Rp ${formatRp(i.subtotal)}</span>`;
+            }
+
+            return `
+                <tr>
+                    <td><b style="font-size:1.1rem; text-transform: capitalize;">${i.name}</b></td>
+                    <td>${qtyHtml}</td>
+                    <td>${priceHtml}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-danger" style="padding: 10px; font-size: 1rem; width:auto;" onclick="customConfirm('Batal Beli?', 'Hapus ${i.name} dari keranjang?', () => removeFromCart(${i.id}))">X</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        // Pembulatan Total Keranjang Utama
+        total = Math.round(total);
+        document.getElementById('grandTotal').innerText = `Rp ${formatRp(total)}`;
+        document.getElementById('grandTotal').dataset.val = total;
+        calculateChange();
+    }
+
+    // Fitur +/- Keranjang (Kalau dipencet, lepas kuncian mutlak dan hitung ulang normal)
+    function updateCartQty(id, delta) {
+        let item = cart.find(x => x.id === id);
+        if (item && !item.isManual) {
+            let newQty = item.qty + delta;
+            if (newQty <= 0) {
+                customConfirm('Hapus Barang?', 'Jumlah jadi 0. Hapus dari keranjang?', () => removeFromCart(id));
+            } else {
+                item.qty = newQty;
+                item.subtotal = item.price * item.qty; // Hitung ulang normal
+                renderCart();
+            }
+        }
+    }
+
+    // Modal Edit Qty
+    function openCartQtyModal(id, name, unit, currentQty) {
+        document.getElementById('cartQtyId').value = id;
+        document.getElementById('cartQtyMsg').innerText = `Kuantitas ${name} (${unit})`;
+        const input = document.getElementById('cartQtyInput');
+        input.value = parseFloat(currentQty.toFixed(3));
+        document.getElementById('cartQtyModal').classList.add('active');
+        setTimeout(() => input.focus(), 100);
+    }
+
+    function saveCartQty() {
+        let id = parseFloat(document.getElementById('cartQtyId').value);
+        let newQty = parseFloat(document.getElementById('cartQtyInput').value);
+        if (newQty > 0) {
+            let item = cart.find(x => x.id === id);
+            if (item) {
+                item.qty = newQty;
+                item.subtotal = item.price * newQty;
+                renderCart();
+            }
+        }
+        closeModal('cartQtyModal');
+    }
+
+    // Edit Harga Barang Manual
+    function editManualPrice(id, currentPrice) {
+        customPrompt('Edit Barang Manual', 'Masukkan harga baru:', formatRp(currentPrice), (newVal) => {
+            const newPrice = parseRp(newVal);
+            if (newPrice > 0) {
+                let item = cart.find(x => x.id === id);
+                if (item && item.isManual) {
+                    item.price = newPrice;
+                    item.subtotal = newPrice;
+                    renderCart();
+                    showToast("Harga barang manual diubah!");
+                }
+            }
+        });
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(x => x.id !== id);
+        renderCart();
+    }
+
+    // --- CHECKOUT & STATUS HIGHLIGHT KEMBALIAN ---
+    function calculateChange() {
+        const total = parseFloat(document.getElementById('grandTotal').dataset.val) || 0;
+        const cashInputVal = document.getElementById('cashInput').value;
+        const cash = parseRp(cashInputVal);
+        const box = document.getElementById('changeDisplayBox');
+        const label = document.getElementById('changeLabelText');
+        const val = document.getElementById('changeDue');
+        const debtSec = document.getElementById('debtSection');
+
+        if (total === 0 || cashInputVal === '') {
+            box.classList.remove('kurang');
+            label.innerText = "Status / Kembalian";
+            val.innerText = "Rp 0";
+            debtSec.style.display = 'none';
+            return;
+        }
+
+        const diff = cash - total;
+        if (diff < 0) {
+            box.classList.add('kurang'); // Box jadi merah
+            label.innerText = "KURANG (HUTANG)";
+            val.innerText = "- Rp " + formatRp(Math.abs(diff));
+            debtSec.style.display = 'block';
+        } else {
+            box.classList.remove('kurang'); // Box hijau
+            label.innerText = "KEMBALIAN";
+            val.innerText = "Rp " + formatRp(diff);
+            debtSec.style.display = 'none';
+        }
+    }
+
+    function processTransaction() {
+        if (cart.length === 0) return customAlert("Transaksi Gagal", "Keranjang masih kosong, Daeng!");
+        
+        const total = parseFloat(document.getElementById('grandTotal').dataset.val);
+        const cash = parseRp(document.getElementById('cashInput').value);
+        let status = "LUNAS";
+        let borrower = "";
+
+        if (cash < total) {
+            borrower = document.getElementById('debtorName').value.trim();
+            if (!borrower) return customAlert("Peringatan", "Uang pembeli kurang! Wajib catat nama untuk masuk BUKU PIUTANG.");
+            status = "HUTANG";
             
-            const container = document.getElementById('script-points');
-            container.innerHTML = '';
-            
-            finalPoints.forEach(pt => {
-                const text = pt.replace(/^[•\-\*\d\.]+\s*/, '');
-                container.innerHTML += `
-                    <div class="flex gap-3 items-start">
-                        <span class="text-emerald-400 mt-1"><i data-lucide="check-circle-2" class="w-5 h-5"></i></span>
-                        <span class="text-xl font-bold text-white leading-relaxed">${text}</span>
-                    </div>`;
+            debts.push({ id: Date.now(), date: new Date().toLocaleDateString('id-ID'), name: borrower, amount: (total - cash) });
+            localStorage.setItem('pos_debts', JSON.stringify(debts));
+            renderDebts();
+        }
+
+        const txData = {
+            id: Date.now(),
+            date: new Date().toLocaleString('id-ID'),
+            items: cart.map(x => `${x.name} (${parseFloat(x.qty.toFixed(3))})`).join("<br>"),
+            total: total,
+            cash: cash,
+            status: status
+        };
+
+        historyLog.unshift(txData);
+        localStorage.setItem('pos_history', JSON.stringify(historyLog));
+        
+        // Clear Kasir
+        cart = [];
+        manualItemCounter = 1; 
+        document.getElementById('cashInput').value = '';
+        document.getElementById('debtorName').value = '';
+        document.getElementById('changeDisplayBox').classList.remove('kurang');
+        document.getElementById('changeLabelText').innerText = "Status / Kembalian";
+        document.getElementById('changeDue').innerText = "Rp 0";
+        renderCart();
+        renderHistory();
+        
+        showToast("Transaksi Berhasil Disimpan!");
+        document.getElementById('searchInput').focus();
+    }
+
+    // --- PIUTANG & DASBOR ---
+    function renderDebts() {
+        const q = document.getElementById('searchDebtInput').value.toLowerCase();
+        const list = debts.filter(x => x.name.toLowerCase().includes(q));
+        
+        document.getElementById('debtList').innerHTML = list.map(d => `
+            <tr>
+                <td style="font-size:0.9rem;">${d.date}</td>
+                <td style="text-transform: capitalize;"><b style="font-size:1.15rem;">${d.name}</b></td>
+                <td style="color:var(--danger); font-weight:900; font-size:1.1rem;">Rp ${formatRp(d.amount)}</td>
+                <td style="text-align:center;">
+                    <button class="btn-success" style="padding: 10px; width: 100%; font-size:0.9rem;" onclick="customConfirm('Pelunasan Hutang?', '${d.name} bayar lunas Rp ${formatRp(d.amount)}?', () => payDebt(${d.id}))">LUNAS</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function payDebt(id) {
+        const debtIdx = debts.findIndex(x => x.id === id);
+        if(debtIdx > -1) {
+            const d = debts[debtIdx];
+            historyLog.unshift({
+                id: Date.now(),
+                date: new Date().toLocaleString('id-ID'),
+                items: `PELUNASAN PIUTANG:<br><b>${d.name}</b>`,
+                total: d.amount,
+                cash: d.amount,
+                status: "PELUNASAN"
             });
+            localStorage.setItem('pos_history', JSON.stringify(historyLog));
             
-            lucide.createIcons();
-            document.getElementById('view-script').classList.remove('hidden');
+            debts.splice(debtIdx, 1);
+            localStorage.setItem('pos_debts', JSON.stringify(debts));
+            
+            renderDebts();
+            renderHistory();
+            showToast(`Piutang ${d.name} LUNAS!`);
         }
+    }
 
-        function closeScriptView() { document.getElementById('view-script').classList.add('hidden'); }
+    function renderHistory() {
+        let omzet = 0, tunai = 0, piutang = 0;
+        
+        document.getElementById('historyList').innerHTML = historyLog.map(h => {
+            omzet += h.total;
+            tunai += Math.min(h.total, h.cash);
+            if (h.status === "HUTANG") piutang += (h.total - h.cash);
+            
+            let badgeColor = (h.status === "LUNAS" || h.status === "PELUNASAN") ? "var(--success)" : "var(--danger)";
+            return `
+                <tr>
+                    <td style="font-size:0.85rem;">${h.date}</td>
+                    <td style="text-transform: capitalize; line-height:1.4;">${h.items}</td>
+                    <td style="font-size:0.9rem;">
+                        <b>Total:</b> Rp ${formatRp(h.total)}<br>
+                        <b>Tunai:</b> Rp ${formatRp(h.cash)}
+                    </td>
+                    <td style="text-align: center;"><span class="badge" style="background: ${badgeColor};">${h.status}</span></td>
+                </tr>
+            `;
+        }).join('');
+        
+        document.getElementById('dailyOmzet').innerText = `Rp ${formatRp(omzet)}`;
+        document.getElementById('dailyCash').innerText = `Rp ${formatRp(tunai)}`;
+        document.getElementById('dailyDebt').innerText = `Rp ${formatRp(piutang)}`;
+    }
 
-        // ================= TASKS & AGENDA LOGIC =================
-        function addTask(text, pic) {
-            state.tasks.unshift({ id: Date.now().toString(), text, pic, done: false });
-            saveData(); renderContent();
+    function clearHistory() {
+        historyLog = [];
+        localStorage.setItem('pos_history', JSON.stringify(historyLog));
+        renderHistory();
+        showToast("Seluruh Riwayat Sesi Dihapus!");
+    }
+
+    function requestShopNameEdit() {
+        customPrompt('Ubah Nama Toko', 'Masukkan nama toko baru:', shopName, (newName) => {
+            shopName = newName.toUpperCase();
+            localStorage.setItem('pos_shop_name', shopName);
+            document.getElementById('shopNameDisplay').innerText = shopName;
+            showToast("Nama Toko Berhasil Diubah!");
+        });
+    }
+
+    function loginGoogle() { showToast("Fitur Cloud & Sync akan aktif saat integrasi server PWA selesai.", "syncing"); closeModal('loginModal'); }
+    function logoutGoogle() { showToast("Kembali ke lokal.", "success"); }
+
+    // Eksekusi Awal
+    window.onload = () => {
+        document.getElementById('shopNameDisplay').innerText = shopName;
+        // Inisialisasi default satuan untuk Custom Select
+        if(units.length > 0) {
+            document.getElementById('itemUnitVal').value = units[0];
+            document.getElementById('itemUnitText').innerText = units[0];
         }
-
-        function toggleTask(id) {
-            const idx = state.tasks.findIndex(t => t.id === id);
-            if (idx > -1) { state.tasks[idx].done = !state.tasks[idx].done; saveData(); renderContent(); }
-        }
-
-        function addAgenda(text, date, location) {
-            state.agenda.push({ id: Date.now().toString(), text, date, location, done: false });
-            state.agenda.sort((a, b) => new Date(a.date) - new Date(b.date));
-            saveData(); renderContent();
-        }
-
-        function toggleAgenda(id) {
-            const idx = state.agenda.findIndex(a => a.id === id);
-            if (idx > -1) { state.agenda[idx].done = !state.agenda[idx].done; saveData(); renderContent(); }
-        }
-
-        // Init App
-        applyTheme();
-        switchTab('notes');
-
-    </script>
+        renderUnits();
+        renderInventory();
+        renderDebts();
+        renderHistory();
+    };
+</script>
 </body>
 </html>
