@@ -2,7 +2,7 @@
     // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.19 LOCAL-FIRST";
+    const APP_VERSION = "4.20 LOCAL-FIRST";
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0emtnZmlnY3Zka2R5eHdzZGJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMTU4MjcsImV4cCI6MjA4Nzc5MTgyN30.jcreMZVPVSjq-piS0nnrxqd4FAME6qwDivIfOzksbqM';
@@ -154,47 +154,53 @@ function scheduleCloudSync() {
     }, 4000);
 }
     async function pushToCloud() {
-        if (APP_MODE !== 'CLOUD' || !currentUser) return;
-        const netStatus = document.getElementById('networkStatus');
-        if (!navigator.onLine) { if(netStatus) { netStatus.innerText = "Tersimpan Lokal (Tunggu Sinyal)"; netStatus.className = "status-sync sync-pending"; } return; }
-        if(netStatus) { netStatus.innerText = "Menyinkronkan..."; netStatus.className = "status-sync sync-pending"; }
+    if (APP_MODE !== 'CLOUD' || !currentUser || !sbClient) return;
+    const ns = document.getElementById('networkStatus');
+    const setS = (t, c) => { if (ns) { ns.innerText = t; ns.className = "status-sync " + c; } };
+    if (!navigator.onLine) return setS("Tersimpan Lokal (Tunggu Sinyal)", "sync-pending");
+    setS("Menyinkronkan...", "sync-pending");
 
-        const payload = { user_id: currentUser.id, inventory: inventory, debts: debts, history: historyLog, updated_at: new Date().toISOString() };
-        const startCounter = localChangeCounter;
+    const startCounter = localChangeCounter;
+    const payload = { user_id: currentUser.id, inventory: inventory, debts: debts, history: historyLog, updated_at: new Date().toISOString() };
+    try {
         const { error } = await sbClient.from('kasir_data').upsert(payload);
-        
-        if (!error) {
-            if (startCounter === localChangeCounter) {
-                localStorage.removeItem(`pos_pending_${currentUser.id}`);
-                if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
-            } else {
-                // Ada transaksi baru saat mengirim: kirim ulang sebentar lagi
-                setTimeout(() => pushToCloud().catch(() => {}), 1500);
-            }
+        if (error) throw error;
+        if (startCounter === localChangeCounter) {
+            localStorage.removeItem(`pos_pending_${currentUser.id}`);
+            setS("Online Mode (Cloud)", "sync-online");
         } else {
-            if(netStatus) { netStatus.innerText = "Gagal Kirim (Tunggu Sinyal)"; netStatus.className = "status-sync sync-offline"; }
+            setTimeout(() => pushToCloud().catch(() => {}), 1500);
         }
+    } catch (e) {
+        console.log('Push gagal, data tetap aman di lokal:', e);
+        setS("Tersimpan Lokal (Tunggu Sinyal)", "sync-pending");
+        setTimeout(() => pushToCloud().catch(() => {}), 15000);
     }
+}
 
     async function fetchCloudData() {
-        if (!navigator.onLine || APP_MODE !== 'CLOUD' || !currentUser) return;
-        let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
-        if (isPending === "true") { pushToCloud(); return; }
+    if (!navigator.onLine || APP_MODE !== 'CLOUD' || !currentUser) return;
+    if (localStorage.getItem(`pos_pending_${currentUser.id}`) === "true") { pushToCloud(); return; }
 
-        const netStatus = document.getElementById('networkStatus');
-        if(netStatus) { netStatus.innerText = "Mengecek Cloud..."; }
-
+    const ns = document.getElementById('networkStatus');
+    if (ns) ns.innerText = "Mengecek Cloud...";
+    const startCounter = localChangeCounter;
+    try {
         const { data, error } = await sbClient.from('kasir_data').select('*').eq('user_id', currentUser.id).single();
+        // Jangan timpa data lokal kalau selama menunggu ada transaksi baru
+        if (startCounter !== localChangeCounter || localStorage.getItem(`pos_pending_${currentUser.id}`) === "true") return;
         if (data) {
             inventory = data.inventory || []; debts = data.debts || []; historyLog = data.history || [];
             localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
             localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
             localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
-            renderAllUI(); 
+            renderAllUI();
         }
-        if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
+        if (ns) { ns.innerText = "Online Mode (Cloud)"; ns.className = "status-sync sync-online"; }
+    } catch (e) {
+        if (ns) { ns.innerText = "Offline (Aman di Lokal)"; ns.className = "status-sync sync-offline"; }
     }
-
+}
     function setupRealtimeSync() {
         if (!sbClient || !currentUser) return;
         if (realtimeChannel) { sbClient.removeChannel(realtimeChannel); }
@@ -857,13 +863,27 @@ function cashAction(a) {
 
 // --- CHECKOUT ---
     function calculateChange() {
-        const total = parseFloat(document.getElementById('grandTotal').dataset.val) || 0; const cashInputVal = document.getElementById('cashInput').value; const cash = parseRp(cashInputVal);
-        const box = document.getElementById('changeDisplayBox'); const label = document.getElementById('changeLabelText'); const val = document.getElementById('changeDue'); const debtSec = document.getElementById('debtSection');
-        if (total === 0 || cashInputVal === '') { box.classList.remove('kurang'); label.innerText = "Status / Kembalian"; val.innerText = "Rp 0"; debtSec.style.display = 'none'; return; }
-        const diff = cash - total;
-        if (diff < 0) { box.classList.add('kurang'); label.innerText = "KURANG (HUTANG)"; val.innerText = "- Rp " + formatRp(Math.abs(diff)); debtSec.style.display = 'block'; } 
-        else { box.classList.remove('kurang'); label.innerText = "KEMBALIAN"; val.innerText = "Rp " + formatRp(diff); debtSec.style.display = 'none'; }
+    const $ = (id) => document.getElementById(id);
+    const total = parseFloat($('grandTotal').dataset.val) || 0;
+    const cashInputVal = $('cashInput').value;
+    const cash = parseRp(cashInputVal);
+    const box = $('changeDisplayBox'), label = $('changeLabelText'),
+          val = $('changeDue'), debtSec = $('debtSection');
+    if (!box || !label || !val || !debtSec) return;
+
+    if (total === 0 || cashInputVal === '') {
+        box.classList.remove('kurang'); label.innerText = "Status / Kembalian";
+        val.innerText = "Rp 0"; debtSec.style.display = 'none'; return;
     }
+    const diff = cash - total;
+    if (diff < 0) {
+        box.classList.add('kurang'); label.innerText = "KURANG (HUTANG)";
+        val.innerText = "- Rp " + formatRp(Math.abs(diff)); debtSec.style.display = 'block';
+    } else {
+        box.classList.remove('kurang'); label.innerText = "KEMBALIAN";
+        val.innerText = "Rp " + formatRp(diff); debtSec.style.display = 'none';
+    }
+}
 
     function processTransactionLama() {
         if (cart.length === 0) return customAlert("Transaksi Gagal", "Keranjang kosong!");
@@ -892,57 +912,40 @@ function cashAction(a) {
 
     const total = parseFloat(document.getElementById('grandTotal').dataset.val) || 0;
     const cash = parseRp(document.getElementById('cashInput').value);
-    let status = "LUNAS";
-    let borrower = "";
+    const debtorEl = document.getElementById('debtorName');
+    let status = "LUNAS", borrower = "";
     let itemsFormatted = cart.map(x => `${x.name} (${parseFloat(Number(x.qty).toFixed(3))} ${x.unit}) - Rp ${formatRp(x.subtotal)}`).join("<br>");
 
     if (cash < total) {
-        borrower = document.getElementById('debtorName').value.trim();
+        borrower = debtorEl ? debtorEl.value.trim() : '';
         if (!borrower) return customAlert("Peringatan", "Wajib catat nama untuk hutang!");
         status = "HUTANG";
         itemsFormatted += `<br><b style="color:var(--danger);">A.N: ${borrower}</b>`;
         debts.push({ id: Date.now(), date: new Date().toLocaleDateString('id-ID'), name: borrower, amount: (total - cash) });
     }
 
-    const txData = {
-        id: Date.now(),
+    historyLog.unshift({
+        id: Date.now() + 1,
         date: new Date().toLocaleString('id-ID'),
         items: itemsFormatted,
         cartSnapshot: JSON.parse(JSON.stringify(cart)),
         total: total, cash: cash, status: status, borrower: borrower
-    };
-    historyLog.unshift(txData);
+    });
 
-    // LANGKAH 1: kosongkan layar DULU (pasti jalan)
+    // 1) SIMPAN LOKAL DULU (instan). Cloud dijadwalkan pelan-pelan di dalam saveDB.
+    try { saveDB(); } catch (e) { console.log('saveDB error:', e); }
+
+    // 2) Kosongkan keranjang & form (null-safe)
     cart = []; manualItemCounter = 1;
-    document.getElementById('cashInput').value = '';
-    document.getElementById('debtorName').value = '';
-    document.getElementById('changeDisplayBox').classList.remove('kurang');
-    document.getElementById('changeLabelText').innerText = "Status / Kembalian";
-    document.getElementById('changeDue').innerText = "Rp 0";
-    document.getElementById('debtSection').style.display = 'none';
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    setVal('cashInput', ''); setVal('debtorName', '');
+    const ds = document.getElementById('debtSection'); if (ds) ds.style.display = 'none';
+    try { resetSelection(); } catch (e) {}
 
-    // LANGKAH 1B: kosongkan tabel keranjang dan total langsung (tanpa menunggu renderCart)
-try {
-    document.getElementById('cartList').innerHTML = '';
-    const gt = document.getElementById('grandTotal');
-    gt.innerText = 'Rp 0';
-    gt.dataset.val = 0;
-    resetSelection();
-} catch (e) { console.log('reset DOM error:', e); }
+    // 3) Render (satu gagal tidak menghentikan yang lain)
+    [renderCart, renderDebts, renderHistory].forEach(fn => { try { fn(); } catch (e) { console.log(fn.name, e); } });
 
-// LANGKAH 2: simpan data
-    setTimeout(() => { try { saveDB(); } catch (e) { console.log('saveDB error:', e); } }, 50);
-
-    // LANGKAH 3: suara dan tampilan (masing-masing dilindungi)
     try { playCekring(); } catch (e) {}
-    try {
-        renderCart(); renderDebts(); renderHistory();
-    } catch (e) {
-        console.log('render error:', e);
-        customAlert("Info Error", "Transaksi tersimpan, tapi tampilan gagal: " + e.message);
-        return;
-    }
     try { document.getElementById('searchInput').focus(); } catch (e) {}
     if (window.checkPendingUpdate) setTimeout(window.checkPendingUpdate, 2500);
     showToast("Transaksi Berhasil Disimpan!");
@@ -1120,8 +1123,8 @@ try {
             shopName = newName.toUpperCase(); 
             localStorage.setItem('pos_shop_name', shopName); 
             document.getElementById('shopNameDisplay').innerText = shopName; 
-            pushToCloud(); 
-            showToast("Nama Toko Berhasil Diubah!"); 
+            scheduleCloudSync();
+            showToast("Nama Toko Berhasil Diubah!");
         }); 
     }
 
