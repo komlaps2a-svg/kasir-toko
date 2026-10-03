@@ -1,58 +1,70 @@
-const CACHE_NAME = 'kasir-daeng-v4.14'; // Ganti angkanya misal jadi v4.11 kalau lu ada update codingan besar di Github
+// Setiap update: ganti angka CACHE_NAME ini DAN angka ?v= di index.html (harus sama)
+const CACHE_NAME = 'kasir-daeng-v4.15';
+
 const urlsToCache = [
   './',
   './index.html',
+  './style.css?v=4.15',
+  './main.js?v=4.15',
   './manifest.json',
-  './icon-192.png'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// Tahap Install: Simpan semua file penting ke Cache HP
+// INSTALL: simpan file penting satu per satu.
+// Kalau ada 1 file yang tidak ada (mis. icon-512.png), yang lain tetap tersimpan.
 self.addEventListener('install', event => {
-  self.skipWaiting(); // Memaksa Service Worker baru buat langsung aktif (nggak nunggu browser ditutup)
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache berhasil dibuka');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(
+        urlsToCache.map(url =>
+          cache.add(url).catch(err => console.log('Gagal cache:', url, err))
+        )
+      )
+    )
   );
 });
 
-// Tahap Activate: Bersihkan sisa-sisa Cache versi lama biar memori HP nggak penuh
+// ACTIVATE: hapus cache versi lama
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Menghapus cache lama:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim()) // Langsung ambil alih halaman yang lagi kebuka
+    caches.keys()
+      .then(names =>
+        Promise.all(
+          names.map(name => {
+            if (name !== CACHE_NAME) return caches.delete(name);
+          })
+        )
+      )
+      .then(() => self.clients.claim())
   );
 });
 
-// Tahap Fetch (Strategi: Network First, Fallback to Cache)
+// FETCH: Network First, kalau offline ambil dari cache
 self.addEventListener('fetch', event => {
+  const req = event.request;
+
+  // Abaikan selain GET dan selain file milik aplikasi sendiri
+  // (Supabase, CDN, dan Google Login tidak disentuh service worker)
+  if (req.method !== 'GET') return;
+  if (new URL(req.url).origin !== self.location.origin) return;
+
   event.respondWith(
-    fetch(event.request)
+    fetch(req)
       .then(response => {
-        // Kalau online dan sukses dapat data terbaru dari server, simpan ke cache
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+        if (response && response.status === 200 && response.type === 'basic') {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
         }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME)
-          .then(cache => {
-            cache.put(event.request, responseToCache);
-          });
         return response;
       })
-      .catch(() => {
-        // Kalau gagal fetch (berarti lagi OFFLINE/Sinyal jelek), ambil dari Cache
-        return caches.match(event.request);
-      })
+      .catch(() =>
+        caches.match(req, { ignoreSearch: true }).then(cached => {
+          if (cached) return cached;
+          // Kalau halaman dibuka saat offline dan tidak ketemu, tampilkan index.html
+          if (req.mode === 'navigate') return caches.match('./index.html');
+        })
+      )
   );
 });
