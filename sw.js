@@ -1,11 +1,11 @@
 // Setiap update: ganti angka CACHE_NAME ini DAN angka ?v= di index.html (harus sama)
-const CACHE_NAME = 'kasir-daeng-v4.17';
+const CACHE_NAME = 'kasir-daeng-v4.19';
 
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=4.17',
-  './main.js?v=4.17',
+  './style.css?v=4.19',
+  './main.js?v=4.19',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -19,7 +19,7 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache =>
       Promise.all(
         urlsToCache.map(url =>
-          cache.add(url).catch(err => console.log('Gagal cache:', url, err))
+          cache.add(new Request(url, { cache: 'reload' })).catch(err => console.log('Gagal cache:', url, err))
         )
       )
     )
@@ -51,7 +51,7 @@ self.addEventListener('fetch', event => {
   if (new URL(req.url).origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-store' })
       .then(response => {
         if (response && response.status === 200 && response.type === 'basic') {
           const copy = response.clone();
