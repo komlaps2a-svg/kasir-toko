@@ -2,7 +2,7 @@
     // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.16 AUTO-RESET";
+    const APP_VERSION = "4.17 CLEAN-CART";
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -895,7 +895,16 @@ function cashAction(a) {
     document.getElementById('changeDue').innerText = "Rp 0";
     document.getElementById('debtSection').style.display = 'none';
 
-    // LANGKAH 2: simpan data
+    // LANGKAH 1B: kosongkan tabel keranjang dan total langsung (tanpa menunggu renderCart)
+try {
+    document.getElementById('cartList').innerHTML = '';
+    const gt = document.getElementById('grandTotal');
+    gt.innerText = 'Rp 0';
+    gt.dataset.val = 0;
+    resetSelection();
+} catch (e) { console.log('reset DOM error:', e); }
+
+// LANGKAH 2: simpan data
     try { saveDB(); } catch (e) { console.log('saveDB error:', e); }
 
     // LANGKAH 3: suara dan tampilan (masing-masing dilindungi)
