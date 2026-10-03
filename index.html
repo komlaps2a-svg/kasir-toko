@@ -16,11 +16,19 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <!-- Terhubung ke CSS dengan Cache Busting -->
-    <link rel="stylesheet" href="style.css?v=4.17">
+    <link rel="stylesheet" href="style.css?v=4.19">
 </head>
 <body>
 
     <div id="toastBox" class="toast-container"></div>
+
+    <div id="updateOverlay" class="modal-overlay" style="z-index: 20000;">
+        <div class="modal-box" style="text-align: center;">
+            <div class="update-spinner"></div>
+            <div class="modal-title">Memperbarui Aplikasi...</div>
+            <div class="modal-msg" style="margin-bottom: 0;">Mohon tunggu sebentar, jangan tutup aplikasi.</div>
+        </div>
+    </div>
 
     <div id="receiptModal" class="modal-overlay">
         <div class="modal-box" style="background: #eef2f5;">
@@ -563,7 +571,9 @@
 
     </div>
 
+    <div id="appVersionLabel" style="text-align:center; font-size:0.7rem; opacity:0.6; padding:10px 0 25px 0;"></div>
+
     <!-- Terhubung ke JS dengan Cache Busting -->
-    <script src="main.js?v=4.17"></script>
+    <script src="main.js?v=4.19"></script>
 </body>
 </html>
