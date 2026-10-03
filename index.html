@@ -16,7 +16,7 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <!-- Terhubung ke CSS dengan Cache Busting -->
-    <link rel="stylesheet" href="style.css?v=4.19">
+    <link rel="stylesheet" href="style.css?v=4.20">
 </head>
 <body>
 
@@ -462,6 +462,16 @@
     <div class="cash-btn" onclick="cashAction('00')">00</div>
     <div class="cash-btn" onclick="cashAction('000')">000</div>
 </div>
+
+<div id="changeDisplayBox" class="change-display-container">
+    <div id="changeLabelText" class="change-label">Status / Kembalian</div>
+    <div id="changeDue" class="change-value">Rp 0</div>
+</div>
+
+<div id="debtSection" style="display:none; margin-top:12px;">
+    <label>Nama Penghutang (wajib)</label>
+    <input type="text" id="debtorName" placeholder="Nama pelanggan..." style="text-transform: capitalize; border-color: var(--danger);">
+</div>
             
             <button class="btn-primary" onclick="processTransaction()" style="margin-top: 20px; padding: clamp(18px, 6vw, 25px); font-size: clamp(1.2rem, 5vw, 1.5rem); box-shadow: 0 6px 0 #111;">
                 <svg class="icon-lg" style="margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -574,6 +584,6 @@
     <div id="appVersionLabel" style="text-align:center; font-size:0.7rem; opacity:0.6; padding:10px 0 25px 0;"></div>
 
     <!-- Terhubung ke JS dengan Cache Busting -->
-    <script src="main.js?v=4.19"></script>
+    <script src="main.js?v=4.20"></script>
 </body>
 </html>
