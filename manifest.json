@@ -1,8 +1,11 @@
 {
-  "name": "Sistem Kasir Daeng V4.14",
+  "name": "Sistem Kasir Daeng V4.15",
   "short_name": "Kasir Daeng",
   "description": "Aplikasi Kasir Pintar Mode Offline",
+  "id": "./index.html",
   "start_url": "./index.html",
+  "scope": "./",
+  "lang": "id",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f4f6f9",
