@@ -2,7 +2,7 @@
     // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.15 CASH-PAD";
+    const APP_VERSION = "4.16 AUTO-RESET";
 
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
@@ -104,6 +104,27 @@
     }
 
     function saveDB() {
+    try {
+        if (APP_MODE === 'CLOUD' && currentUser) {
+            localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
+            localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
+            localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
+            localStorage.setItem(`pos_pending_${currentUser.id}`, "true");
+        } else {
+            localStorage.setItem('pos_guest_inv', JSON.stringify(inventory));
+            localStorage.setItem('pos_guest_debt', JSON.stringify(debts));
+            localStorage.setItem('pos_guest_hist', JSON.stringify(historyLog));
+        }
+    } catch (err) {
+        console.log('Gagal simpan lokal:', err);
+        showToast("Memori HP penuh! Hapus riwayat lama.", "error");
+    }
+    if (APP_MODE === 'CLOUD' && currentUser) {
+        pushToCloud().catch(err => console.log('Gagal kirim cloud:', err));
+    }
+}
+
+function saveDBLama() {
         if (APP_MODE === 'CLOUD' && currentUser) {
             localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
             localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
@@ -161,7 +182,7 @@
             .on('postgres_changes', { event: '*', schema: 'public', table: 'kasir_data', filter: `user_id=eq.${currentUser.id}` }, (payload) => {
                 let isPending = localStorage.getItem(`pos_pending_${currentUser.id}`);
                 if (isPending !== "true" && payload.new) {
-                    inventory = payload.new.inventory || []; debts = payload.new.debts || []; historyLog = payload.new.history || [];
+                    if (payload.new.inventory) inventory = payload.new.inventory; if (payload.new.debts) debts = payload.new.debts; if (payload.new.history) historyLog = payload.new.history;
                     localStorage.setItem(`pos_inv_${currentUser.id}`, JSON.stringify(inventory));
                     localStorage.setItem(`pos_debt_${currentUser.id}`, JSON.stringify(debts));
                     localStorage.setItem(`pos_hist_${currentUser.id}`, JSON.stringify(historyLog));
@@ -817,7 +838,7 @@ function cashAction(a) {
         else { box.classList.remove('kurang'); label.innerText = "KEMBALIAN"; val.innerText = "Rp " + formatRp(diff); debtSec.style.display = 'none'; }
     }
 
-    function processTransaction() {
+    function processTransactionLama() {
         if (cart.length === 0) return customAlert("Transaksi Gagal", "Keranjang kosong!");
         const total = parseFloat(document.getElementById('grandTotal').dataset.val); const cash = parseRp(document.getElementById('cashInput').value);
         let status = "LUNAS"; let borrower = ""; let itemsFormatted = cart.map(x => `${x.name} (${parseFloat(x.qty.toFixed(3))} ${x.unit}) - Rp ${formatRp(x.subtotal)}`).join("<br>");
@@ -839,7 +860,58 @@ function cashAction(a) {
         renderCart(); renderDebts(); renderHistory(); document.getElementById('searchInput').focus(); showToast("Transaksi Berhasil Disimpan!");
     }
 
-    // --- CETAK STRUK THERMAL ---
+    function processTransaction() {
+    if (cart.length === 0) return customAlert("Transaksi Gagal", "Keranjang kosong!");
+
+    const total = parseFloat(document.getElementById('grandTotal').dataset.val) || 0;
+    const cash = parseRp(document.getElementById('cashInput').value);
+    let status = "LUNAS";
+    let borrower = "";
+    let itemsFormatted = cart.map(x => `${x.name} (${parseFloat(Number(x.qty).toFixed(3))} ${x.unit}) - Rp ${formatRp(x.subtotal)}`).join("<br>");
+
+    if (cash < total) {
+        borrower = document.getElementById('debtorName').value.trim();
+        if (!borrower) return customAlert("Peringatan", "Wajib catat nama untuk hutang!");
+        status = "HUTANG";
+        itemsFormatted += `<br><b style="color:var(--danger);">A.N: ${borrower}</b>`;
+        debts.push({ id: Date.now(), date: new Date().toLocaleDateString('id-ID'), name: borrower, amount: (total - cash) });
+    }
+
+    const txData = {
+        id: Date.now(),
+        date: new Date().toLocaleString('id-ID'),
+        items: itemsFormatted,
+        cartSnapshot: JSON.parse(JSON.stringify(cart)),
+        total: total, cash: cash, status: status, borrower: borrower
+    };
+    historyLog.unshift(txData);
+
+    // LANGKAH 1: kosongkan layar DULU (pasti jalan)
+    cart = []; manualItemCounter = 1;
+    document.getElementById('cashInput').value = '';
+    document.getElementById('debtorName').value = '';
+    document.getElementById('changeDisplayBox').classList.remove('kurang');
+    document.getElementById('changeLabelText').innerText = "Status / Kembalian";
+    document.getElementById('changeDue').innerText = "Rp 0";
+    document.getElementById('debtSection').style.display = 'none';
+
+    // LANGKAH 2: simpan data
+    try { saveDB(); } catch (e) { console.log('saveDB error:', e); }
+
+    // LANGKAH 3: suara dan tampilan (masing-masing dilindungi)
+    try { playCekring(); } catch (e) {}
+    try {
+        renderCart(); renderDebts(); renderHistory();
+    } catch (e) {
+        console.log('render error:', e);
+        customAlert("Info Error", "Transaksi tersimpan, tapi tampilan gagal: " + e.message);
+        return;
+    }
+    try { document.getElementById('searchInput').focus(); } catch (e) {}
+    showToast("Transaksi Berhasil Disimpan!");
+}
+
+// --- CETAK STRUK THERMAL ---
     function printReceipt(id) {
         const tx = historyLog.find(x => x.id === id); if (!tx) return;
         let itemsHtml = '';
@@ -931,7 +1003,7 @@ function cashAction(a) {
                 if (h.status === "HUTANG") badgeColor = "var(--danger)"; 
                 if (h.status === "CICIL") badgeColor = "var(--warning)";
                 
-                let itemsArr = h.items.split('<br>').filter(x => x.trim() !== ''); 
+                let itemsArr = String(h.items || '').split('<br>').filter(x => x.trim() !== ''); 
                 let visibleItems = [itemsArr[0]]; let hiddenItems = [];
                 for(let i = 1; i < itemsArr.length; i++) { 
                     if(itemsArr[i].includes("A.N:")) visibleItems.push(itemsArr[i]); 
