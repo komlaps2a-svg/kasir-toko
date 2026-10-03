@@ -2,8 +2,7 @@
     // BAGIAN 4: ENGINE JAVASCRIPT & CLOUD SYNC
     // ==========================================
 
-    const APP_VERSION = "4.17 CLEAN-CART";
-
+    const APP_VERSION = "4.19 LOCAL-FIRST";
     // --- KONFIGURASI SUPABASE ---
     const SUPABASE_URL = 'https://ytzkgfigcvdkdyxwsdbn.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0emtnZmlnY3Zka2R5eHdzZGJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMTU4MjcsImV4cCI6MjA4Nzc5MTgyN30.jcreMZVPVSjq-piS0nnrxqd4FAME6qwDivIfOzksbqM';
@@ -120,7 +119,7 @@
         showToast("Memori HP penuh! Hapus riwayat lama.", "error");
     }
     if (APP_MODE === 'CLOUD' && currentUser) {
-        pushToCloud().catch(err => console.log('Gagal kirim cloud:', err));
+        scheduleCloudSync();
     }
 }
 
@@ -139,6 +138,21 @@ function saveDBLama() {
     }
 
     // --- CLOUD SYNC & REALTIME ---
+let syncTimer = null;
+let localChangeCounter = 0;
+
+function scheduleCloudSync() {
+    localChangeCounter++;
+    if (syncTimer) clearTimeout(syncTimer);
+    const ns = document.getElementById('networkStatus');
+    if (ns) { ns.innerText = "Tersimpan Lokal ✓ (sinkron nanti)"; ns.className = "status-sync sync-pending"; }
+    // Kirim pelan-pelan di belakang: tunggu 4 detik, lalu saat HP senggang
+    syncTimer = setTimeout(() => {
+        const run = () => pushToCloud().catch(e => console.log('Gagal kirim cloud:', e));
+        if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 5000 });
+        else run();
+    }, 4000);
+}
     async function pushToCloud() {
         if (APP_MODE !== 'CLOUD' || !currentUser) return;
         const netStatus = document.getElementById('networkStatus');
@@ -146,11 +160,17 @@ function saveDBLama() {
         if(netStatus) { netStatus.innerText = "Menyinkronkan..."; netStatus.className = "status-sync sync-pending"; }
 
         const payload = { user_id: currentUser.id, inventory: inventory, debts: debts, history: historyLog, updated_at: new Date().toISOString() };
+        const startCounter = localChangeCounter;
         const { error } = await sbClient.from('kasir_data').upsert(payload);
         
         if (!error) {
-            localStorage.removeItem(`pos_pending_${currentUser.id}`);
-            if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
+            if (startCounter === localChangeCounter) {
+                localStorage.removeItem(`pos_pending_${currentUser.id}`);
+                if(netStatus) { netStatus.innerText = "Online Mode (Cloud)"; netStatus.className = "status-sync sync-online"; }
+            } else {
+                // Ada transaksi baru saat mengirim: kirim ulang sebentar lagi
+                setTimeout(() => pushToCloud().catch(() => {}), 1500);
+            }
         } else {
             if(netStatus) { netStatus.innerText = "Gagal Kirim (Tunggu Sinyal)"; netStatus.className = "status-sync sync-offline"; }
         }
@@ -194,6 +214,13 @@ function saveDBLama() {
 
     // --- BOOTING SUPER AMAN ---
     function bootApp() {
+        const lblVer = document.getElementById('appVersionLabel');
+        if (lblVer) lblVer.innerText = 'Versi ' + APP_VERSION;
+        const lastVer = localStorage.getItem('pos_last_version');
+        if (lastVer && lastVer !== APP_VERSION) {
+            setTimeout(() => showToast('✅ Aplikasi sudah diperbarui ke versi ' + APP_VERSION, 'update'), 800);
+        }
+        localStorage.setItem('pos_last_version', APP_VERSION);
         updateMuteUI();
         document.getElementById('shopNameDisplay').innerText = shopName;
         if(units.length > 0) { 
@@ -905,7 +932,7 @@ try {
 } catch (e) { console.log('reset DOM error:', e); }
 
 // LANGKAH 2: simpan data
-    try { saveDB(); } catch (e) { console.log('saveDB error:', e); }
+    setTimeout(() => { try { saveDB(); } catch (e) { console.log('saveDB error:', e); } }, 50);
 
     // LANGKAH 3: suara dan tampilan (masing-masing dilindungi)
     try { playCekring(); } catch (e) {}
@@ -917,6 +944,7 @@ try {
         return;
     }
     try { document.getElementById('searchInput').focus(); } catch (e) {}
+    if (window.checkPendingUpdate) setTimeout(window.checkPendingUpdate, 2500);
     showToast("Transaksi Berhasil Disimpan!");
 }
 
@@ -1103,28 +1131,49 @@ try {
     // --- EKSEKUSI AWAL ---
     window.addEventListener('load', () => { bootApp(); });
 
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-            .then(reg => {
-                console.log('Service Worker terdaftar!', reg.scope);
-                reg.onupdatefound = () => {
-                    const installingWorker = reg.installing;
-                    installingWorker.onstatechange = () => {
-                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            showToast("Update terbaru dipasang! Memuat ulang...", "update");
-                            setTimeout(() => window.location.reload(), 1500);
-                        }
-                    };
+    // --- UPDATE OTOMATIS + LAYAR LOADING ---
+if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    let updatePending = false;
+    const hadController = !!navigator.serviceWorker.controller;
+
+    const applyUpdate = () => {
+        if (refreshing) return;
+        // Jangan reload kalau kasir sedang melayani pembeli
+        if (cart.length > 0) {
+            updatePending = true;
+            showToast("Update siap! Dipasang setelah transaksi selesai.", "update");
+            return;
+        }
+        refreshing = true;
+        const o = document.getElementById('updateOverlay');
+        if (o) o.classList.add('active');
+        setTimeout(() => window.location.reload(), 2000);
+    };
+
+    window.checkPendingUpdate = () => {
+        if (updatePending) { updatePending = false; applyUpdate(); }
+    };
+
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+            reg.update();
+            reg.onupdatefound = () => {
+                const w = reg.installing;
+                if (!w) return;
+                w.onstatechange = () => {
+                    if (w.state === 'installed' && navigator.serviceWorker.controller) applyUpdate();
                 };
-            })
-            .catch(err => console.log('Service Worker Gagal!', err));
-        });
-        
-        let refreshing; const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!hadController || refreshing) return;
-            refreshing = true;
-            window.location.reload();
-        });
-    }
+            };
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') reg.update();
+            });
+        })
+        .catch(err => console.log('Service Worker Gagal!', err));
+    });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (hadController) applyUpdate();
+    });
+}
