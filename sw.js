@@ -1,11 +1,11 @@
 // Setiap update: ganti angka CACHE_NAME ini DAN angka ?v= di index.html (harus sama)
-const CACHE_NAME = 'kasir-daeng-v4.15';
+const CACHE_NAME = 'kasir-daeng-v4.16';
 
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=4.15',
-  './main.js?v=4.15',
+  './style.css?v=4.16',
+  './main.js?v=4.16',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
