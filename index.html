@@ -17,6 +17,8 @@
 
     <!-- Terhubung ke CSS dengan Cache Busting -->
     <link rel="stylesheet" href="style.css?v=4.20">
+    <!-- BARU 4.21: tampilan tablet & laptop (HP tidak terpengaruh) -->
+    <link rel="stylesheet" href="desktop.css?v=4.21">
 </head>
 <body>
 
@@ -585,5 +587,7 @@
 
     <!-- Terhubung ke JS dengan Cache Busting -->
     <script src="main.js?v=4.20"></script>
+    <!-- BARU 4.21: mode layar besar + keyboard (dimuat setelah main.js) -->
+    <script src="keyboard.js?v=4.21"></script>
 </body>
 </html>
