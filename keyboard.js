@@ -31,8 +31,10 @@
         kids.slice(iT).forEach((n) => right.appendChild(n));
         const hint = document.createElement('div');
         hint.className = 'kb-hint';
-        hint.innerHTML = '⌨️ <b>PgUp / PgDn</b> pindah kotak &nbsp; <b>Enter</b> pilih / tambah &nbsp; <b>↑ ↓</b> pilih barang &nbsp; ' +
-            '<b>F2</b> cari &nbsp; <b>F3</b> kalkulator &nbsp; <b>F4</b> uang &nbsp; <b>F9</b> selesai &nbsp; <b>Esc</b> batal &nbsp; <b>P</b> uang pas (di kotak uang)';
+        hint.innerHTML = '⌨️ <b>↑ ↓</b> / <b>PgUp PgDn</b> pindah kotak &nbsp; <b>Enter</b> pilih / tambah &nbsp; <b>F2</b> cari &nbsp; <b>F3</b> kalkulator &nbsp; ' +
+            '<b>F4</b> uang &nbsp; <b>F6</b> ubah qty terakhir &nbsp; <b>F7</b> hapus terakhir &nbsp; <b>F9</b> selesai &nbsp; <b>Esc</b> batal &nbsp; ' +
+            '<b>P</b> uang pas &nbsp; <b>Shift+1…6</b> = +2rb/5rb/10rb/20rb/50rb/100rb (di kotak uang) &nbsp; <b>Y</b> = Ya di konfirmasi ' +
+            '<br>📍 Kotak aktif: <b id="kbStatus">-</b>';
         kasir.appendChild(hint);
         kasir.insertBefore(hint, kasir.children[1] || null);
         kasir.appendChild(left);
@@ -51,6 +53,12 @@
                    'itemName', 'searchInventoryInput', 'searchDebtInput'];
     const KASIR_IDS = ['searchInput', 'itemQty', 'nominalInput', 'calcDisplay', 'cashInput', 'debtorName', 'btnProcess'];
 
+    const LABELS = { searchInput: 'Cari Barang', itemQty: 'Qty', nominalInput: 'Uang Pembeli (Hitung Otomatis)', calcDisplay: 'Kalkulator',
+        cashInput: 'Uang Diterima', debtorName: 'Nama Penghutang', btnProcess: 'Tombol Selesaikan Transaksi', itemName: 'Nama Barang Baru',
+        searchInventoryInput: 'Cari Database Barang', searchDebtInput: 'Cari Penghutang' };
+    document.addEventListener('focusin', function (e) {
+        const st = $('kbStatus'); if (st && e.target && LABELS[e.target.id]) st.textContent = LABELS[e.target.id];
+    });
     function usable(el) {
         if (!el || el.disabled) return false;
         if (el.getClientRects().length === 0) return false;
@@ -75,7 +83,7 @@
 
     // ---------- 3. ALUR PENCARIAN BARANG ----------
     const searchItems = () => Array.from(document.querySelectorAll('#searchResults .search-item'));
-    const resultsOpen = () => { const sr = $('searchResults'); return !!sr && sr.style.display === 'block' && searchItems().length > 0; };
+    const resultsOpen = () => { const sr = $('searchResults'); return !!sr && getComputedStyle(sr).display !== 'none' && searchItems().length > 0; };
     function paint(items) {
         items.forEach((el, i) => el.classList.toggle('kb-active', i === kbIdx));
         if (items[kbIdx]) items[kbIdx].scrollIntoView({ block: 'nearest' });
@@ -170,6 +178,8 @@
     // ---------- 6. KOTAK UANG PEMBELI ----------
     function cashKeys(e) {
         const k = e.key;
+        const bills = { Digit1: '+2000', Digit2: '+5000', Digit3: '+10000', Digit4: '+20000', Digit5: '+50000', Digit6: '+100000' };
+        if (e.shiftKey && bills[e.code]) { e.preventDefault(); cashAction(bills[e.code]); return; }
         if (k === 'Enter') { if (!kbOn) return; e.preventDefault(); finish(); }
         else if (k === 'p' || k === 'P') { e.preventDefault(); cashAction('PAS'); }
         else if (k === 'Delete') { e.preventDefault(); cashAction('C'); }
@@ -180,7 +190,7 @@
         const k = e.key;
         if (k === 'ArrowDown' || k === 'ArrowUp') {
             const items = searchItems();
-            if (!resultsOpen()) return;
+            if (!resultsOpen()) { e.preventDefault(); moveZone(k === 'ArrowDown' ? 1 : -1); return; }
             e.preventDefault();
             kbIdx = k === 'ArrowDown' ? (kbIdx + 1) % items.length : (kbIdx <= 0 ? items.length - 1 : kbIdx - 1);
             paint(items);
@@ -199,6 +209,11 @@
         const k = e.key;
         if (modal.id === 'updateOverlay') return;
         if (k === 'Escape') { e.preventDefault(); window.closeModal(modal.id); return; }
+        if (modal.id === 'customConfirm') {
+            if (k === 'y' || k === 'Y') { e.preventDefault(); $('confirmBtnYes').click(); }
+            else if (k === 'n' || k === 'N') { e.preventDefault(); window.closeModal('customConfirm'); }
+            return;
+        }
         if (k !== 'Enter') return;
         if (modal.id === 'customPrompt') { e.preventDefault(); $('promptBtnSave').click(); }
         else if (modal.id === 'cartQtyModal') { e.preventDefault(); saveCartQty(); }
@@ -211,7 +226,7 @@
         ['Tab', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].indexOf(e.key) > -1 ||
         /^F\d+$/.test(e.key) || /^Key[A-Z]$/.test(e.code || '') || e.code === 'NumpadEnter';
 
-    document.addEventListener('keydown', function (e) {
+    window.addEventListener('keydown', function (e) {
         if (!kbOn && isPhysical(e)) setKb();
         const k = e.key;
         const id = e.target && e.target.id;
@@ -227,6 +242,21 @@
         if (k === 'F3') { e.preventDefault(); hideResults(); focusEl($('calcDisplay')); return; }
         if (k === 'F4') { e.preventDefault(); hideResults(); focusEl($('cashInput')); return; }
         if (k === 'F9') { e.preventDefault(); finish(); return; }
+        if (k === 'F6' || k === 'F7') {
+            e.preventDefault();
+            const last = cart[cart.length - 1];
+            if (!last) { showToast('Keranjang masih kosong', 'warning'); return; }
+            if (k === 'F6') {
+                if (last.isManual) editManualPrice(last.id, last.price);
+                else openCartQtyModal(last.id, last.name, last.unit, last.qty);
+            } else {
+                customConfirm('Batal Beli?', 'Hapus ' + last.name + '? (tekan Y untuk Ya)', () => removeFromCart(last.id));
+            }
+            return;
+        }
+        if ((k === 'ArrowDown' || k === 'ArrowUp') && id !== 'searchInput' && KASIR_IDS.concat(['itemName', 'searchInventoryInput', 'searchDebtInput']).indexOf(id) > -1) {
+            e.preventDefault(); moveZone(k === 'ArrowDown' ? 1 : -1); return;
+        }
 
         if (k === 'Escape') {
             const a = document.activeElement;
@@ -257,7 +287,7 @@
             const typing = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].indexOf(tag) > -1 || (a && a.isContentEditable);
             if (!typing) { const s = $('searchInput'); if (usable(s)) s.focus(); }
         }
-    });
+    }, true);
 
     // ---------- 10. LAIN-LAIN ----------
     // HP kecil tetap dikunci tegak (seperti sebelumnya); tablet/laptop bebas.
@@ -270,7 +300,7 @@
     window.addEventListener('load', function () {
         setTimeout(function () {
             const v = $('appVersionLabel');
-            if (v) v.textContent = 'Versi ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '') + ' • Layar Besar & Keyboard 4.21';
+            if (v) v.textContent = 'Versi ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '') + ' • Layar Besar & Keyboard 4.22';
             // Laptop/PC: kursor langsung di kotak cari barang
             if (finePointer && !document.querySelector('.modal-overlay.active')) { const s = $('searchInput'); if (usable(s)) s.focus(); }
         }, 500);
