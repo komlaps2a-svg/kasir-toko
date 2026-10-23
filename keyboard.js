@@ -25,10 +25,12 @@
         const table = kasir.querySelector(':scope > .table-responsive');
         const iT = kids.indexOf(table);
         if (iT < 1) return;
+        // Di index.html lama, panel Piutang & Riwayat "nyangkut" di dalam panel Kasir (div kurang tertutup).
+        const nested = kids.filter((n) => n.classList.contains('panel'));
         const left = document.createElement('div'); left.className = 'kasir-left';
         const right = document.createElement('div'); right.className = 'kasir-right';
         kids.slice(1, iT).forEach((n) => left.appendChild(n));
-        kids.slice(iT).forEach((n) => right.appendChild(n));
+        kids.slice(iT).filter((n) => nested.indexOf(n) < 0).forEach((n) => right.appendChild(n));
         const hint = document.createElement('div');
         hint.className = 'kb-hint';
         hint.innerHTML = '⌨️ <b>↑ ↓</b> / <b>PgUp PgDn</b> pindah kotak &nbsp; <b>Enter</b> pilih / tambah &nbsp; <b>F2</b> cari &nbsp; <b>F3</b> kalkulator &nbsp; ' +
@@ -39,6 +41,17 @@
         kasir.insertBefore(hint, kasir.children[1] || null);
         kasir.appendChild(left);
         kasir.appendChild(right);
+        nested.forEach((n) => kasir.appendChild(n));
+
+        // Layar >= 768px: Piutang & Riwayat dipindah ke samping (jadi kolom sendiri).
+        // HP (< 768px): tetap di tempat lama, tampilan HP tidak berubah.
+        const mq = window.matchMedia('(min-width: 768px)');
+        const placePanels = function () {
+            if (mq.matches) { let ref = kasir; nested.forEach((n) => { ref.after(n); ref = n; }); }
+            else { nested.forEach((n) => kasir.appendChild(n)); }
+        };
+        placePanels();
+        if (mq.addEventListener) mq.addEventListener('change', placePanels); else mq.addListener(placePanels);
     })();
 
     // Kalkulator bisa difokuskan (untuk diketik dengan keyboard)
@@ -300,7 +313,7 @@
     window.addEventListener('load', function () {
         setTimeout(function () {
             const v = $('appVersionLabel');
-            if (v) v.textContent = 'Versi ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '') + ' • Layar Besar & Keyboard 4.22';
+            if (v) v.textContent = 'Versi ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : '') + ' • Layar Besar & Keyboard 4.23';
             // Laptop/PC: kursor langsung di kotak cari barang
             if (finePointer && !document.querySelector('.modal-overlay.active')) { const s = $('searchInput'); if (usable(s)) s.focus(); }
         }, 500);
