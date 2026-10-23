@@ -1,0 +1,106 @@
+/* ==========================================================
+   desktop.css  (v4.21) - Tampilan TABLET & LAPTOP
+   Semua aturan layout ada di dalam @media (min-width: 768px),
+   jadi tampilan HP (di bawah 768px) TIDAK berubah sama sekali.
+   ========================================================== */
+
+/* --- Aman untuk semua layar (tidak mengubah tampilan HP) --- */
+.kasir-left, .kasir-right { display: contents; }
+.kb-hint { display: none; }
+.search-item.kb-active { background: #e8f8f5; border-left: 5px solid var(--success); }
+
+/* Petunjuk keyboard: hanya muncul kalau keyboard fisik terdeteksi */
+body.kb-on .kb-hint {
+    display: block; background: #e8f4fd; border: 1px dashed var(--accent); color: var(--primary);
+    border-radius: 8px; padding: 8px 10px; margin-bottom: 12px;
+    font-size: 0.72rem; font-weight: 700; line-height: 1.9;
+}
+body.kb-on .kb-hint b {
+    background: #fff; border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 5px; font-size: 0.7rem; white-space: nowrap;
+}
+body.kb-on .calc-display:focus-visible { outline: 4px solid var(--accent); outline-offset: 2px; }
+body.kb-on button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ==========================================================
+   TABLET (>= 768px): 2 kolom -> Kasir kiri, panel lain kanan
+   ========================================================== */
+@media (min-width: 768px) {
+    body { max-width: none; }
+
+    .main-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+        grid-template-rows: auto auto auto 1fr;
+        gap: 15px; align-items: start;
+    }
+    .main-container > .panel:nth-child(1) { grid-column: 2; grid-row: 1; }       /* Satuan & Database */
+    .main-container > .panel:nth-child(2) { grid-column: 1; grid-row: 1 / span 4; } /* Meja Kasir */
+    .main-container > .panel:nth-child(3) { grid-column: 2; grid-row: 2; }       /* Piutang */
+    .main-container > .panel:nth-child(4) { grid-column: 2; grid-row: 3; }       /* Dasbor & Riwayat */
+
+    #searchResults { max-height: 340px; }
+
+    /* Tombol kalkulator tidak perlu sebesar di HP */
+    .calc-btn { min-height: 64px; padding: 12px 0; font-size: 1.7rem; }
+    .calc-btn.op { font-size: 1.6rem; }
+    .calc-btn.plus-btn { font-size: 2.3rem; }
+    .calc-btn.eq-btn { min-height: 56px; font-size: 1.7rem; }
+    .calc-display { font-size: 2.3rem; padding: 14px 18px; }
+    .cash-btn { min-height: 58px; font-size: 1.4rem; }
+    .cash-btn.bill { font-size: 1.05rem; }
+}
+
+/* ==========================================================
+   LAPTOP / TABLET LANDSCAPE (>= 1024px)
+   Panel Kasir menempel di layar (sticky), panel kanan lebar tetap
+   ========================================================== */
+@media (min-width: 1024px) {
+    body { padding: 18px 22px; }
+    .main-container { grid-template-columns: minmax(0, 1fr) 390px; gap: 18px; }
+    #dbContent .table-responsive { max-height: 45vh !important; }
+    #historyContent .table-responsive { max-height: 55vh; overflow-y: auto; }
+}
+@media (min-width: 1024px) and (min-height: 640px) {
+    .main-container > .panel:nth-child(2) {
+        position: sticky; top: 18px; align-self: start;
+        max-height: calc(100vh - 36px); overflow-y: auto;
+    }
+}
+
+/* ==========================================================
+   LAPTOP LEBAR (>= 1280px): Meja Kasir jadi 2 kolom
+   kiri = cari barang + kalkulator | kanan = keranjang + pembayaran
+   ========================================================== */
+@media (min-width: 1280px) {
+    .main-container > .panel:nth-child(2) {
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 22px; align-content: start;
+    }
+    .main-container > .panel:nth-child(2) > h2,
+    .main-container > .panel:nth-child(2) > .kb-hint { grid-column: 1 / -1; }
+    .kasir-left, .kasir-right { display: block; min-width: 0; }
+    .kasir-right > .table-responsive {
+        margin-top: 0 !important; min-height: 130px; max-height: 32vh; overflow-y: auto;
+    }
+    .kasir-right > .table-responsive thead th { position: sticky; top: 0; z-index: 1; }
+    .calc-btn { min-height: 56px; font-size: 1.55rem; padding: 8px 0; }
+    .calc-btn.plus-btn { font-size: 2.1rem; }
+    .calc-btn.eq-btn { min-height: 50px; }
+    .calc-display { font-size: 2rem; padding: 10px 16px; }
+    .cash-btn { min-height: 50px; font-size: 1.25rem; }
+    .cash-btn.bill { font-size: 0.95rem; }
+}
+
+/* ==========================================================
+   LAYAR SANGAT LEBAR (>= 1700px): 3 kolom
+   Database | Meja Kasir | Piutang + Riwayat
+   ========================================================== */
+@media (min-width: 1700px) {
+    .main-container { grid-template-columns: 370px minmax(0, 1fr) 420px; }
+    .main-container > .panel:nth-child(1) { grid-column: 1; grid-row: 1 / span 4; }
+    .main-container > .panel:nth-child(2) { grid-column: 2; grid-row: 1 / span 4; }
+    .main-container > .panel:nth-child(3) { grid-column: 3; grid-row: 1; }
+    .main-container > .panel:nth-child(4) { grid-column: 3; grid-row: 2; }
+    #dbContent .table-responsive { max-height: 55vh !important; }
+}
